@@ -1,0 +1,171 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 48aa331ce968403ea7ca94d786ba26c3, type: 3}
+  m_Name: HumanLimitContainer
+  m_EditorClassIdentifier: 
+  humanLimits:
+  - bone: 0
+    min: {x: -180, y: -180, z: -180}
+    max: {x: 180, y: 180, z: 180}
+  - bone: 7
+    min: {x: -30, y: -30, z: -20}
+    max: {x: 60, y: 30, z: 20}
+  - bone: 8
+    min: {x: -30, y: -30, z: -20}
+    max: {x: 60, y: 30, z: 20}
+  - bone: 54
+    min: {x: -30, y: -30, z: -20}
+    max: {x: 60, y: 30, z: 20}
+  - bone: 9
+    min: {x: -30, y: -30, z: -20}
+    max: {x: 30, y: 30, z: 20}
+  - bone: 10
+    min: {x: -30, y: -30, z: -20}
+    max: {x: 30, y: 30, z: 20}
+  - bone: 11
+    min: {x: -20, y: -10, z: -10}
+    max: {x: 20, y: 10, z: 30}
+  - bone: 13
+    min: {x: -20, y: -10, z: -70}
+    max: {x: 20, y: 80, z: 30}
+  - bone: 15
+    min: {x: -140, y: 0, z: 0}
+    max: {x: 0, y: 135, z: 0}
+  - bone: 17
+    min: {x: 0, y: -15, z: -75}
+    max: {x: 0, y: 15, z: 75}
+  - bone: 24
+    min: {x: 0, y: -15, z: -20}
+    max: {x: 0, y: 10, z: 20}
+  - bone: 25
+    min: {x: 0, y: -15, z: -20}
+    max: {x: 0, y: 10, z: 20}
+  - bone: 26
+    min: {x: 0, y: -90, z: 0}
+    max: {x: 0, y: 0, z: 0}
+  - bone: 27
+    min: {x: 0, y: 0, z: -15}
+    max: {x: 0, y: 15, z: 75}
+  - bone: 28
+    min: {x: 0, y: 0, z: 0}
+    max: {x: 0, y: 0, z: 90}
+  - bone: 29
+    min: {x: 0, y: 0, z: 0}
+    max: {x: 0, y: 0, z: 75}
+  - bone: 30
+    min: {x: 0, y: 0, z: -15}
+    max: {x: 0, y: 0, z: 75}
+  - bone: 31
+    min: {x: 0, y: 0, z: 0}
+    max: {x: 0, y: 0, z: 90}
+  - bone: 32
+    min: {x: 0, y: 0, z: 0}
+    max: {x: 0, y: 0, z: 75}
+  - bone: 33
+    min: {x: 0, y: -15, z: -15}
+    max: {x: 0, y: 0, z: 75}
+  - bone: 34
+    min: {x: 0, y: 0, z: 0}
+    max: {x: 0, y: 0, z: 90}
+  - bone: 35
+    min: {x: 0, y: 0, z: 0}
+    max: {x: 0, y: 0, z: 75}
+  - bone: 36
+    min: {x: 0, y: -30, z: -15}
+    max: {x: 0, y: 0, z: 75}
+  - bone: 37
+    min: {x: 0, y: 0, z: 0}
+    max: {x: 0, y: 0, z: 90}
+  - bone: 38
+    min: {x: 0, y: 0, z: 0}
+    max: {x: 0, y: 0, z: 75}
+  - bone: 12
+    min: {x: -20, y: -10, z: -30}
+    max: {x: 20, y: 10, z: 10}
+  - bone: 14
+    min: {x: -20, y: -80, z: -30}
+    max: {x: 20, y: 10, z: 70}
+  - bone: 16
+    min: {x: -140, y: -135, z: 0}
+    max: {x: 0, y: 0, z: 0}
+  - bone: 18
+    min: {x: 0, y: -15, z: -75}
+    max: {x: 0, y: 15, z: 75}
+  - bone: 39
+    min: {x: 0, y: -10, z: -20}
+    max: {x: 0, y: 15, z: 20}
+  - bone: 40
+    min: {x: 0, y: -10, z: -20}
+    max: {x: 0, y: 15, z: 20}
+  - bone: 41
+    min: {x: 0, y: 0, z: 0}
+    max: {x: 0, y: 90, z: 0}
+  - bone: 42
+    min: {x: 0, y: -15, z: -75}
+    max: {x: 0, y: 0, z: 15}
+  - bone: 43
+    min: {x: 0, y: 0, z: -90}
+    max: {x: 0, y: 0, z: 0}
+  - bone: 44
+    min: {x: 0, y: 0, z: -75}
+    max: {x: 0, y: 0, z: 0}
+  - bone: 45
+    min: {x: 0, y: 0, z: -75}
+    max: {x: 0, y: 0, z: 15}
+  - bone: 46
+    min: {x: 0, y: 0, z: -90}
+    max: {x: 0, y: 0, z: 0}
+  - bone: 47
+    min: {x: 0, y: 0, z: -75}
+    max: {x: 0, y: 0, z: 0}
+  - bone: 48
+    min: {x: 0, y: 0, z: -75}
+    max: {x: 0, y: 15, z: 15}
+  - bone: 49
+    min: {x: 0, y: 0, z: -90}
+    max: {x: 0, y: 0, z: 0}
+  - bone: 50
+    min: {x: 0, y: 0, z: -75}
+    max: {x: 0, y: 0, z: 0}
+  - bone: 51
+    min: {x: 0, y: 0, z: -75}
+    max: {x: 0, y: 30, z: 15}
+  - bone: 52
+    min: {x: 0, y: 0, z: -90}
+    max: {x: 0, y: 0, z: 0}
+  - bone: 53
+    min: {x: 0, y: 0, z: -75}
+    max: {x: 0, y: 0, z: 0}
+  - bone: 1
+    min: {x: -120, y: -60, z: -45}
+    max: {x: 30, y: 20, z: 0}
+  - bone: 3
+    min: {x: 0, y: 0, z: 0}
+    max: {x: 120, y: 0, z: 0}
+  - bone: 5
+    min: {x: -30, y: 0, z: 0}
+    max: {x: 15, y: 0, z: 15}
+  - bone: 19
+    min: {x: -30, y: 0, z: 0}
+    max: {x: 30, y: 0, z: 0}
+  - bone: 2
+    min: {x: -120, y: -20, z: 0}
+    max: {x: 30, y: 60, z: 45}
+  - bone: 4
+    min: {x: 0, y: 0, z: 0}
+    max: {x: 120, y: 0, z: 0}
+  - bone: 6
+    min: {x: -30, y: 0, z: -15}
+    max: {x: 15, y: 0, z: 0}
+  - bone: 20
+    min: {x: -30, y: 0, z: 0}
+    max: {x: 30, y: 0, z: 0}

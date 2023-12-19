@@ -1,0 +1,19 @@
+{
+  "name": "com.github.nosix.capsule",
+  "version": "0.1.0",
+  "displayName": "Capsule",
+  "description": "",
+  "unity": "2022.3",
+  "keywords": [],
+  "author": {
+    "name": "nosix"
+  },
+  "dependencies": {},
+  "samples": [
+    {
+      "displayName": "CapsuleDemo",
+      "description": "",
+      "path": "Samples~/CapsuleDemo"
+    }
+  ]
+}

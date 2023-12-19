@@ -1,0 +1,16 @@
+{
+  "name": "Capsule.Editor",
+  "rootNamespace": "",
+  "references": [
+    "GUID:eb8c753988514144bb14e01b867e1db1"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

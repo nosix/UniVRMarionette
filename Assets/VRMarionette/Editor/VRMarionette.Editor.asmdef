@@ -1,0 +1,16 @@
+{
+  "name": "VRMarionette.Editor",
+  "rootNamespace": "",
+  "references": [
+    "GUID:7c1b02d9b20d14c899dc74abc5f97d4c"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

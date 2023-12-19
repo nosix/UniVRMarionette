@@ -1,0 +1,17 @@
+{
+  "name": "CapsuleDemo",
+  "rootNamespace": "",
+  "references": [
+    "GUID:eb8c753988514144bb14e01b867e1db1",
+    "GUID:9f001c842cd14cb6bcd2ef2bd58af656"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

@@ -1,0 +1,30 @@
+{
+  "name": "com.github.nosix.vrm.marionette",
+  "version": "0.1.0",
+  "displayName": "VRMarionette",
+  "description": "",
+  "unity": "2022.3",
+  "keywords": [
+    "vrm"
+  ],
+  "author": {
+    "name": "nosix"
+  },
+  "dependencies": {
+    "com.vrmc.gltf": "https://github.com/vrm-c/UniVRM.git?path=/Assets/UniGLTF#v0.115.0",
+    "com.vrmc.vrm": "https://github.com/vrm-c/UniVRM.git?path=/Assets/VRM10#v0.115.0",
+    "com.vrmc.vrmshaders": "https://github.com/vrm-c/UniVRM.git?path=/Assets/VRMShaders#v0.115.0"
+  },
+  "samples": [
+    {
+      "displayName": "VrmControlRigManipuratorDemo",
+      "description": "",
+      "path": "Samples~/VrmControlRigManipuratorDemo"
+    },
+    {
+      "displayName": "VrmForceGeneratorDemo",
+      "description": "",
+      "path": "Samples~/VrmForceGeneratorDemo"
+    }
+  ]
+}
