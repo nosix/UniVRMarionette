@@ -258,9 +258,16 @@ namespace VRMarionette
                 return;
             }
 
-            if (context.CanRotate() && task.Rotation.HasValue)
+            if (task.Rotation.HasValue)
             {
-                ApplyRotationToBone(context, task.Rotation.Value);
+                if (context.CanRotate())
+                {
+                    ApplyRotationToBone(context, task.Rotation.Value);
+                }
+                else if (context.CanAxisRotate())
+                {
+                    ApplyAxisRotationToBone(context, task.Rotation.Value);
+                }
             }
 
             var force = task.Force;
@@ -390,6 +397,13 @@ namespace VRMarionette
                     $"expectedRotationAngle: {rotationAngle}"
                 );
             }
+        }
+
+        private void ApplyAxisRotationToBone(Context context, Quaternion rotation)
+        {
+            var eulerAngles = context.ToLocalRotation(rotation).eulerAngles;
+            var axisDirection = context.TargetAxisDirection;
+            ApplyAxisRotationToBone(context, Vector3.Dot(eulerAngles, axisDirection));
         }
 
         private void ApplyRotationToBone(Context context, Quaternion rotation)
@@ -602,6 +616,15 @@ namespace VRMarionette
                     HumanBodyBones.RightFoot or
                     HumanBodyBones.LeftHand or
                     HumanBodyBones.RightHand;
+            }
+
+            public bool CanAxisRotate()
+            {
+                return Bone is
+                    HumanBodyBones.LeftUpperArm or
+                    HumanBodyBones.LeftUpperLeg or
+                    HumanBodyBones.RightUpperArm or
+                    HumanBodyBones.RightUpperLeg;
             }
 
             public Context Next(BoneProperties properties)
