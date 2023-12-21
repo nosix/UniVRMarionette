@@ -1,0 +1,21 @@
+{
+  "name": "MetaXRDemoApp",
+  "rootNamespace": "",
+  "references": [
+    "GUID:d5252f715f634d9e9d39c744f9b52710",
+    "GUID:eb8c753988514144bb14e01b867e1db1",
+    "GUID:7c1b02d9b20d14c899dc74abc5f97d4c"
+  ],
+  "includePlatforms": [
+    "Android",
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

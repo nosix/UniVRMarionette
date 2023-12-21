@@ -1,10 +1,11 @@
 using UnityEditor;
 using UnityEngine;
+using VRMarionette_Samples.VrmForceGeneratorDemo.Runtime;
 
-namespace VRMarionette_Samples.VrmForceGeneratorDemo
+namespace VRMarionette_Samples.VrmForceGeneratorDemo.Editor
 {
     [CustomEditor(typeof(TransformSamples))]
-    public class TransformSamplesEditor : Editor
+    public class TransformSamplesEditor : UnityEditor.Editor
     {
         private int _selectedIndex;
 

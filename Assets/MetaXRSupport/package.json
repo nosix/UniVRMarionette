@@ -1,0 +1,21 @@
+{
+  "name": "com.github.nosix.vrm.meta.xr",
+  "version": "0.1.2",
+  "displayName": "MetaXRSupport",
+  "description": "",
+  "unity": "2022.3",
+  "keywords": [],
+  "author": {
+    "name": "nosix"
+  },
+  "dependencies": {
+    "com.meta.xr.sdk.all": "60.0.0"
+  },
+  "samples": [
+    {
+      "displayName": "MetaXRDemoApp",
+      "description": "",
+      "path": "Samples~/MetaXRDemoApp"
+    }
+  ]
+}

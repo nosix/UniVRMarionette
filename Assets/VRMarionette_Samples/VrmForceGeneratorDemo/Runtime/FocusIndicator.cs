@@ -1,7 +1,7 @@
 using UnityEngine;
 using VRMarionette;
 
-namespace VRMarionette_Samples.VrmForceGeneratorDemo
+namespace VRMarionette_Samples.VrmForceGeneratorDemo.Runtime
 {
     public class FocusIndicator : MonoBehaviour, IFocusIndicator
     {
