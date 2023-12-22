@@ -57,7 +57,7 @@ Shader "Universal Render Pipeline/Alpha Hand Outline (SBB)"
             Varyings vert(Attributes input)
             {
                 Varyings output;
-                float3 positionWS = TransformObjectToWorld(input.positionOS);
+                float3 positionWS = TransformObjectToWorld(input.positionOS.xyz);
                 output.positionCS = TransformWorldToHClip(positionWS);
                 output.normalWS = TransformObjectToWorldNormal(input.normalOS);
                 output.viewDirectionWS = _WorldSpaceCameraPos.xyz - positionWS.xyz;
