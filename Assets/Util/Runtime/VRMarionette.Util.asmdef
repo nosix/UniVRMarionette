@@ -1,6 +1,6 @@
 {
-  "name": "Capsule",
-  "rootNamespace": "",
+  "name": "VRMarionette.Util",
+  "rootNamespace": "VRMarionette",
   "references": [],
   "includePlatforms": [],
   "excludePlatforms": [],

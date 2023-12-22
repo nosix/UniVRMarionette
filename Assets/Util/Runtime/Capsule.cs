@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Capsule
+namespace VRMarionette.Util
 {
     public class Capsule : MonoBehaviour
     {

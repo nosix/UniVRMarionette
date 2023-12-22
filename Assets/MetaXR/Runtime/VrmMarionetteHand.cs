@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UniVRM10;
 
-namespace MetaXRSupport
+namespace VRMarionette.MetaXR
 {
     public class VrmMarionetteHand : MonoBehaviour
     {

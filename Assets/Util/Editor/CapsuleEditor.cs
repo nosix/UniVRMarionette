@@ -1,10 +1,10 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace Capsule
+namespace VRMarionette.Util.Editor
 {
     [CustomEditor(typeof(Capsule))]
-    public class CapsuleEditor : Editor
+    public class CapsuleEditor : UnityEditor.Editor
     {
         private CapsuleCollider _capsuleCollider;
 

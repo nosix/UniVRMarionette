@@ -1,11 +1,12 @@
 using UnityEngine;
 using VRMarionette;
+using VRMarionette.Util;
 
-namespace MetaXRSupport_Samples.MetaXRDemoApp
+namespace MetaXR_Samples.MetaXRDemoApp
 {
     public class FocusIndicator : MonoBehaviour, IFocusIndicator
     {
-        public Capsule.Capsule capsule;
+        public Capsule capsule;
 
         public Transform Transform => capsule.transform;
 

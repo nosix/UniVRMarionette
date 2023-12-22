@@ -1,4 +1,4 @@
-namespace Capsule
+namespace VRMarionette.Util
 {
     public enum Direction
     {

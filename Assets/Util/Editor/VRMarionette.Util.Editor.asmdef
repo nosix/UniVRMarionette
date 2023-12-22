@@ -1,6 +1,6 @@
 {
-  "name": "Capsule.Editor",
-  "rootNamespace": "",
+  "name": "VRMarionette.Util.Editor",
+  "rootNamespace": "VRMarionette",
   "references": [
     "GUID:eb8c753988514144bb14e01b867e1db1"
   ],
