@@ -138,8 +138,8 @@ PlayerSettings:
   bundleVersion: 0.1.0
   preloadedAssets:
   - {fileID: 11400000, guid: 4c13485017b834bd28b46cda24efd5a8, type: 2}
-  - {fileID: 11400000, guid: 39c5f2fbb2b234264a156703ecca2dbf, type: 2}
   - {fileID: 3722400457516341552, guid: 5ca767d8ff53949ec9429c0fbbbdf9fe, type: 2}
+  - {fileID: 11400000, guid: 39c5f2fbb2b234264a156703ecca2dbf, type: 2}
   metroInputSource: 0
   wsaTransparentSwapchain: 0
   m_HolographicPauseOnTrackingLoss: 1
@@ -160,7 +160,7 @@ PlayerSettings:
   androidSupportedAspectRatio: 1
   androidMaxAspectRatio: 2.1
   applicationIdentifier:
-    Android: com.UnityTechnologies.com.unity.template.urpblank
+    Android: com.github.nosix.vrm.marionette
     Standalone: com.Unity-Technologies.com.unity.template.urp-blank
     iPhone: com.Unity-Technologies.com.unity.template.urp-blank
   buildNumber:
