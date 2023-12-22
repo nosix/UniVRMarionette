@@ -860,7 +860,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: aa70c70787230f248b33d8a0ce1a6c3d, type: 2}
+  - {fileID: 2100000, guid: de90f8a24983741d59e1720f0ecd5ecb, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -909,7 +909,7 @@ MonoBehaviour:
   _ovrSkeleton: {fileID: 0}
   _confidenceBehavior: 1
   _systemGestureBehavior: 1
-  _systemGestureMaterial: {fileID: 2100000, guid: 9d107f2f043e1ed408b970f146718017,
+  _systemGestureMaterial: {fileID: 2100000, guid: 6f700519974db4790b0d6e905becddf3,
     type: 2}
 --- !u!114 &750077064
 MonoBehaviour:
@@ -939,9 +939,9 @@ MonoBehaviour:
   _confidenceBehavior: 1
   _systemGestureBehavior: 1
   _renderPhysicsCapsules: 0
-  _skeletonMaterial: {fileID: 2100000, guid: 9c05c5a6e4902ff4082cfb34e5b64b2d, type: 2}
+  _skeletonMaterial: {fileID: 2100000, guid: 4d570df5113e448e88e864fa89f84062, type: 2}
   _capsuleMaterial: {fileID: 0}
-  _systemGestureMaterial: {fileID: 2100000, guid: 38beab19e7c1f7947afac78fd60f90b0,
+  _systemGestureMaterial: {fileID: 2100000, guid: 35092db94dbb442f09977acd38804d14,
     type: 2}
 --- !u!114 &750077066
 MonoBehaviour:
@@ -1738,7 +1738,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: aa70c70787230f248b33d8a0ce1a6c3d, type: 2}
+  - {fileID: 2100000, guid: de90f8a24983741d59e1720f0ecd5ecb, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1787,7 +1787,7 @@ MonoBehaviour:
   _ovrSkeleton: {fileID: 0}
   _confidenceBehavior: 1
   _systemGestureBehavior: 1
-  _systemGestureMaterial: {fileID: 2100000, guid: 9d107f2f043e1ed408b970f146718017,
+  _systemGestureMaterial: {fileID: 2100000, guid: 6f700519974db4790b0d6e905becddf3,
     type: 2}
 --- !u!114 &1430474189
 MonoBehaviour:
@@ -1817,9 +1817,9 @@ MonoBehaviour:
   _confidenceBehavior: 1
   _systemGestureBehavior: 1
   _renderPhysicsCapsules: 0
-  _skeletonMaterial: {fileID: 2100000, guid: 9c05c5a6e4902ff4082cfb34e5b64b2d, type: 2}
+  _skeletonMaterial: {fileID: 2100000, guid: 4d570df5113e448e88e864fa89f84062, type: 2}
   _capsuleMaterial: {fileID: 0}
-  _systemGestureMaterial: {fileID: 2100000, guid: 38beab19e7c1f7947afac78fd60f90b0,
+  _systemGestureMaterial: {fileID: 2100000, guid: 35092db94dbb442f09977acd38804d14,
     type: 2}
 --- !u!114 &1430474191
 MonoBehaviour:
