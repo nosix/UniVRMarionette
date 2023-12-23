@@ -64,6 +64,9 @@ Interface
 
 ### MetaXR : `com.github.nosix.vrm.meta.xr`
 
+Meta XR を使う場合のサポートパッケージです。
+Meta XR All-in-One SDK に依存しており併せてダウンロードされます。
+
 Prefab
 
 - VrmMarionetteHand
@@ -78,6 +81,9 @@ URP (Shader and Material)
 - Meta XR SDK で提供されている Shader と Material を URP 用に書き換えた物
 
 ### Util : `com.github.nosix.vrm.util`
+
+接触した部位をフォーカス表示するための Capsule を提供するパッケージです。
+使用は必須ではありません。
 
 Prefab
 
