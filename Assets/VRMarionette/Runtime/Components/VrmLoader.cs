@@ -41,6 +41,7 @@ namespace VRMarionette
                 spring.ColliderGroups.AddRange(springBoneColliderGroups);
             }
 
+            // SpringBone の設定を変更した後に再構築が必要
             instance.Runtime.ReconstructSpringBone();
 
             if (humanLimits)
@@ -55,9 +56,9 @@ namespace VRMarionette
                 var forceGenerator = instance.gameObject.AddComponent<VrmForceGenerator>();
                 forceGenerator.Initialize(instance, forceFields);
                 forceGenerator.verbose = verbose;
-                foreach (var forceTrigger in forceSources)
+                foreach (var forceSource in forceSources)
                 {
-                    forceTrigger.Initialize(forceGenerator);
+                    forceSource.Initialize(forceGenerator);
                 }
             }
 
