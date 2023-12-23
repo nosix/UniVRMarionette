@@ -155,3 +155,4 @@ sysinfo.txt
 # End of https://www.toptal.com/developers/gitignore/api/unity,rider
 
 /Assets/StreamingAssets/*
+*_BurstDebugInformation_DoNotShip
