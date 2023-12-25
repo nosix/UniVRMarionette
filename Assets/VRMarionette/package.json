@@ -11,9 +11,9 @@
     "name": "nosix"
   },
   "dependencies": {
-    "com.vrmc.gltf": "0.115.0",
-    "com.vrmc.vrm": "0.115.0",
-    "com.vrmc.vrmshaders": "0.115.0"
+    "com.vrmc.gltf": "0.116.0",
+    "com.vrmc.vrm": "0.116.0",
+    "com.vrmc.vrmshaders": "0.116.0"
   },
   "samples": [
     {
