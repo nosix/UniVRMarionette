@@ -18,8 +18,17 @@ namespace VRMarionette
         private IFocusIndicator _focusIndicator;
         private VrmForceGenerator _forceGenerator;
         private bool _isInitialized;
+
+        // フォーカスの対象となる Capsule
         private CapsuleCollider _targetCapsule;
+
+        // 摘まみ状態が終了した後に対象の Collider 内に留まっているときは true
+        private bool _holdOff;
+
+        // 摘まんでいる対象の Collider
         private Collider _holdCollider;
+
+        // 摘まみ操作中の前フレームの位置と回転
         private Vector3 _prevPosition;
         private Quaternion _prevRotation;
 
@@ -45,10 +54,15 @@ namespace VRMarionette
 
             if (other is CapsuleCollider capsule) Focus(capsule);
 
-            if (!hold && onEnter)
+            if (!hold && !_holdOff && onEnter)
             {
                 _forceGenerator.QueueForceGeneration(_collider, other);
             }
+        }
+
+        private void OnTriggerExit(Collider other)
+        {
+            _holdOff = false;
         }
 
         private void OnTriggerStay(Collider other)
@@ -63,7 +77,7 @@ namespace VRMarionette
                     _prevPosition = t.position;
                     _prevRotation = t.rotation;
                     return;
-                case false when !onEnter:
+                case false when !_holdOff && !onEnter:
                     _forceGenerator.QueueForceGeneration(_collider, other);
                     break;
             }
@@ -98,7 +112,12 @@ namespace VRMarionette
 
             if (!hold)
             {
-                _holdCollider = null;
+                // 摘まみ状態を終了する
+                if (_holdCollider is not null)
+                {
+                    _holdCollider = null;
+                    _holdOff = true;
+                }
             }
 
             if (_holdCollider is null) return;
