@@ -1,6 +1,6 @@
 {
   "name": "com.github.nosix.vrm.meta.xr",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "displayName": "VRMarionette MetaXR",
   "description": "Support library for using VRMarionette with MetaXR",
   "unity": "2022.3",
