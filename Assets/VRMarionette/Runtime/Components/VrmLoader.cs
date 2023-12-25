@@ -1,6 +1,7 @@
 using System.IO;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Events;
 using UniVRM10;
 
 namespace VRMarionette
@@ -19,6 +20,9 @@ namespace VRMarionette
         public HumanLimitContainer humanLimits;
 
         public ForceFieldContainer forceFields;
+
+        [Space]
+        public UnityEvent<Vrm10Instance> onLoaded;
 
         [Space]
         public bool enableMixer;
@@ -79,6 +83,8 @@ namespace VRMarionette
             o.transform.localScale = srcTransform.localScale;
 
             Destroy(gameObject);
+
+            onLoaded.Invoke(instance);
         }
 
         /**
