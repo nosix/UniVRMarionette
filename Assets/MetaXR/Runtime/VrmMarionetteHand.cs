@@ -152,17 +152,17 @@ namespace VRMarionette.MetaXR
             _dstRingTransform.rotation = _srcRingTransform.rotation;
 
             var thumbIndexDistance = Vector3.Distance(_dstThumbTransform.position, _dstIndexTransform.position);
-            var isGrabbing = _isGrabbing;
-            _isGrabbing = thumbIndexDistance < grabThresholdDistance;
-            if (isGrabbing != _isGrabbing)
-            {
-                onGrab.Invoke(_isGrabbing);
-            }
+            var isGrabbing = thumbIndexDistance < grabThresholdDistance;
+            if (isGrabbing == _isGrabbing) return;
+            _isGrabbing = isGrabbing;
+            onGrab.Invoke(_isGrabbing);
         }
 
         public void Grab(bool on)
         {
-            onGrab.Invoke(on);
+            if (on == _isGrabbing) return;
+            _isGrabbing = on;
+            onGrab.Invoke(_isGrabbing);
         }
     }
 }
