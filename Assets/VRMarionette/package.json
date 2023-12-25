@@ -19,7 +19,7 @@
     {
       "displayName": "VrmControlRigManipuratorDemo",
       "description": "Demo for manipulating a model using VrmControlRigManipulator.",
-      "path": "Sample~/VrmControlRigManipuratorDemo"
+      "path": "Sample~/VrmControlRigManipulatorDemo"
     },
     {
       "displayName": "VrmForceGeneratorDemo",
