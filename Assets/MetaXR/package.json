@@ -14,8 +14,8 @@
   "samples": [
     {
       "displayName": "MetaXRDemoApp",
-      "description": "",
-      "path": "Samples~/MetaXRDemoApp"
+      "description": "Demo app for Meta Quest",
+      "path": "Sample~/MetaXRDemoApp"
     }
   ]
 }

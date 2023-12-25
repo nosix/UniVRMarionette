@@ -12,8 +12,8 @@
   "samples": [
     {
       "displayName": "CapsuleDemo",
-      "description": "",
-      "path": "Samples~/CapsuleDemo"
+      "description": "Demo for synchronizing the shape of CapsuleCollider with a Capsule.",
+      "path": "Sample~/CapsuleDemo"
     }
   ]
 }
