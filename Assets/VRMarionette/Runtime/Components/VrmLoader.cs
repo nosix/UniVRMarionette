@@ -21,6 +21,8 @@ namespace VRMarionette
 
         public ForceFieldContainer forceFields;
 
+        public BodyWeightContainer bodyWeights;
+
         [Space]
         public UnityEvent<Vrm10Instance> onLoaded;
 
@@ -64,6 +66,12 @@ namespace VRMarionette
                 {
                     forceSource.Initialize(forceGenerator);
                 }
+            }
+
+            if (bodyWeights)
+            {
+                // 重力の演算をする機能を追加する
+                instance.gameObject.AddComponent<VrmRigidbody>().Initialize(instance, bodyWeights);
             }
 
             if (enableMixer)

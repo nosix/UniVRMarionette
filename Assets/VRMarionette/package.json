@@ -25,6 +25,11 @@
       "displayName": "VrmForceGeneratorDemo",
       "description": "Demo for manipulating a model using VrmForceGenerator and VrmForceSource",
       "path": "Sample~/VrmForceGeneratorDemo"
+    },
+    {
+      "displayName": "VrmRigidbodyDemo",
+      "description": "Demo for applying the effects of gravity",
+      "path": "Sample~/VrmRigidbodyDemo"
     }
   ]
 }

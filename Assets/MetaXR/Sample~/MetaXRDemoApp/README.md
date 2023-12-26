@@ -41,10 +41,12 @@
          - VRMarionette/Runtime/ScriptableObjects/HumanLimitContainer
       4. Force Fields を設定する
          - VRMarionette/Runtime/ScriptableObjects/ForceFieldContainer
-      5. Spring Bone Collider Groups を設定する
+      5. Body Weights を設定する
+         - VRMarionette/Runtime/ScriptableObjects/BodyWeightContainer
+      6. Spring Bone Collider Groups を設定する
          - LeftVrmMarionetteHand
          - RightVrmMarionetteHand
-      6. Force Sources を設定する
+      7. Force Sources を設定する
          - LeftVrmMarionetteHand の Palm
          - RightVrmMarionetteHand の Palm
    7. VrmMarionetteHand Component を編集する
@@ -55,3 +57,6 @@
    9. Game Object を作成し GrabSupport と命名する
       - GrabSupport Script を追加する
          - Left Hand と Right Hand を設定する
+   10. Game Object を作成し RigidbodyMode と命名する
+      - RigidbodyMode Script を追加する
+         - 有効にする場合は on を true に設定する

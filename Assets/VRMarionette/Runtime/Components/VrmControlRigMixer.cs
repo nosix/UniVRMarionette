@@ -209,7 +209,7 @@ namespace VRMarionette
             rightToes.Reset();
         }
 
-        private void SetBoneRotation(HumanBodyBones bone, Vector3 angle)
+        public void SetBoneRotation(HumanBodyBones bone, Vector3 angle)
         {
             if (vrmManipulator) vrmManipulator.SetBoneRotation(bone, angle);
         }

@@ -1,11 +1,11 @@
 using UnityEditor;
 using UnityEngine;
-using VRMarionette_Sample.VrmForceGeneratorDemo.Runtime;
+using VRMarionette_Sample.VrmRigidbodyDemo.Runtime;
 
 namespace VRMarionette_Sample.VrmForceGeneratorDemo.Editor
 {
-    [CustomEditor(typeof(TransformSamples))]
-    public class TransformSamplesEditor : UnityEditor.Editor
+    [CustomEditor(typeof(RotationSamples))]
+    public class RotationSamplesEditor : UnityEditor.Editor
     {
         private int _selectedIndex;
 
@@ -15,7 +15,7 @@ namespace VRMarionette_Sample.VrmForceGeneratorDemo.Editor
             base.OnInspectorGUI();
 
             // 対象のコンポーネントを取得
-            var component = (TransformSamples)target;
+            var component = (RotationSamples)target;
 
             if (component.samples is not { Length: > 0 }) return;
 

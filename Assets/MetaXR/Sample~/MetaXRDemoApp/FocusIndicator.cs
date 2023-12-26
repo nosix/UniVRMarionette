@@ -2,7 +2,7 @@ using UnityEngine;
 using VRMarionette;
 using VRMarionette.Util;
 
-namespace MetaXR_Samples.MetaXRDemoApp
+namespace MetaXR_Sample.MetaXRDemoApp
 {
     public class FocusIndicator : MonoBehaviour, IFocusIndicator
     {

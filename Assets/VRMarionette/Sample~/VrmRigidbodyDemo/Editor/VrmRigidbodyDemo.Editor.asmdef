@@ -1,8 +1,8 @@
 {
-    "name": "VrmForceGeneratorDemo.Editor",
+    "name": "VrmRigidbodyDemo.Editor",
     "rootNamespace": "",
     "references": [
-        "GUID:5c0d9e34d0bb46faa5ec79880f861a9d"
+        "GUID:29db6ee0785c457eb4886eeeabb8f0d0"
     ],
     "includePlatforms": [
         "Editor"

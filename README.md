@@ -230,6 +230,15 @@ Prefab
    2. VrmMarionetteHand の Palm に FocusIndicator Script を追加する
       - Capsule に FocusIndicator を設定する
 
+### 重力を働かせる場合
+
+以下を追加で行ってください。
+
+1. Scene を編集する
+   1. VRM Model の VrmLoader に以下を設定する
+      - BodyWeights
+         - Packages/VRMarionette/Runtime/ScriptableObjects/BodyWeightContainer
+
 ## バージョン
 
 | VRMarionette | UniVRM   |

@@ -8,7 +8,7 @@
       - Vrm File Name に VRM ファイルのファイル名を指定する
       - (Option) Force Fields を編集して身体部位に割り当てられた CapsuleCollider の位置や大きさを変更する
 3. Play
-4. TextXxxCollision GameObject の Transform Samples Component を操作する
+4. TestXxxCollision GameObject の Transform Samples Component を操作する
    1. Slider で Element のインデックスを指定する
    2. Apply ボタンを押下する
       - Sphere が衝突して関節が曲がる (関節が曲がらない場合は以下を試す)

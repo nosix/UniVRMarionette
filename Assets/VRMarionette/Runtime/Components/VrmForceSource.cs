@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace VRMarionette
 {
@@ -13,6 +14,9 @@ namespace VRMarionette
         public bool hold;
         public bool onEnter;
         public Color focusColor = Color.yellow;
+
+        [Space]
+        public UnityEvent<FocusEvent> onFocus;
 
         private SphereCollider _collider;
         private IFocusIndicator _focusIndicator;
@@ -52,7 +56,7 @@ namespace VRMarionette
         {
             if (!_isInitialized) return;
 
-            if (other is CapsuleCollider capsule) Focus(capsule);
+            if (other is CapsuleCollider capsule) Focus(capsule, true);
 
             if (!hold && !_holdOff && onEnter)
             {
@@ -63,6 +67,8 @@ namespace VRMarionette
         private void OnTriggerExit(Collider other)
         {
             _holdOff = false;
+
+            if (other is CapsuleCollider capsule) Focus(capsule, false);
         }
 
         private void OnTriggerStay(Collider other)
@@ -83,11 +89,38 @@ namespace VRMarionette
             }
         }
 
-        private void Focus(CapsuleCollider capsule)
+        private void Focus(CapsuleCollider capsule, bool on)
         {
-            if (_focusIndicator is null) return;
+            if (!_forceGenerator.BoneProperties.TryGetValue(capsule.transform, out var nextBoneProperty)) return;
 
-            _targetCapsule = capsule;
+            if (_targetCapsule is not null &&
+                _forceGenerator.BoneProperties.TryGetValue(_targetCapsule.transform, out var prevBoneProperty))
+            {
+                // フォーカスする場合は targetCapsule と capsule が異なる場合に現在のフォーカスを外す
+                // フォーカスを外す場合は targetCapsule と capsule が同一の場合にフォーカスを外す
+                if (on == (_targetCapsule != capsule))
+                {
+                    _targetCapsule = null;
+                    onFocus.Invoke(new FocusEvent
+                    {
+                        Bone = prevBoneProperty.Bone,
+                        On = false
+                    });
+                }
+            }
+
+            // フォーカスが外れている場合はフォーカスを更新する
+            if (on && _targetCapsule is null)
+            {
+                _targetCapsule = capsule;
+                onFocus.Invoke(new FocusEvent
+                {
+                    Bone = nextBoneProperty.Bone,
+                    On = true
+                });
+            }
+
+            if (_focusIndicator is null) return;
 
             _focusIndicator.SetCapsule(capsule);
             _focusIndicator.Color = focusColor;

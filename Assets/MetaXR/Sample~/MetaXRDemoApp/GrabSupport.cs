@@ -1,7 +1,7 @@
 using UnityEngine;
 using VRMarionette.MetaXR;
 
-namespace MetaXR_Samples.MetaXRDemoApp
+namespace MetaXR_Sample.MetaXRDemoApp
 {
     public class GrabSupport : MonoBehaviour
     {

@@ -60,7 +60,13 @@ namespace VRMarionette
             };
         }
 
-        private Vector3 GetBoneRotation(HumanBodyBones bone)
+        /// <summary>
+        /// 骨の回転角度を取得する。
+        /// </summary>
+        /// <param name="bone">取得対象の骨</param>
+        /// <returns>-180度から180度の間の角度</returns>
+        /// <exception cref="ArgumentOutOfRangeException">存在しない骨を指定した</exception>
+        public Vector3 GetBoneRotation(HumanBodyBones bone)
         {
             return GetBoneCategory(bone, out var groupId) switch
             {

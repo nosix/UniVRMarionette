@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace VRMarionette_Samples.VrmForceGeneratorDemo.Runtime
+namespace VRMarionette_Sample.VrmForceGeneratorDemo.Runtime
 {
     public class TransformSamples : MonoBehaviour
     {
