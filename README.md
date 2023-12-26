@@ -71,9 +71,14 @@ Prefab
 
 - VrmMarionetteHand
    - 揺れ物と干渉する SpringBoneCollider や回転や移動のトリガーとなる VrmForceSource を持つ
-   - OVRSkeleton の位置と回転を追跡して、中指の付け根(palm)、親指の先(thumb)、人差指の先(index)、小指の先(ring)に設定された SpringBoneCollider を動かす
-   - 親指の先と人差指の先が grabThresholdDistance より近付いた場合に摘まみ状態にする
-   - 状態が変わった時に onGrab を呼び出す (摘まみ状態ならば true を引数に渡す) 
+   - OVRHand を設定すると Hand Tracking が有効になる 
+      - OVRSkeleton の位置と回転を追跡して、中指の付け根(Palm)、親指の先(Thumb)、人差指の先(Index)、小指の先(Ring)に設定された SpringBoneCollider を動かす
+      - 親指の先と人差指の先が grabThresholdDistance より近付いた場合に摘まみ状態にする
+      - 状態が変わった時に onGrab を呼び出す (摘まみ状態ならば true を引数に渡す)
+   - OVRControllerHelper を設定すると Controller Tracking が有効になる
+      - OVRControllerHelper の位置と回転を追跡して、Palm に設定された SpringBoneCollider を動かす
+      - 摘まみ状態にする場合には Grab メソッドを引数 true で呼び出す
+      - 状態が変わった時に onGrab を呼び出す (摘まみ状態ならば true を引数に渡す)
 
 URP (Shader and Material)
 
@@ -96,11 +101,13 @@ Prefab
 
 ## 導入方法
 
-### Meta Quest 3 で使う
+### Meta Quest 3 で使う (VRM ランタイムロード使用)
 
 完成した Scene の例は Assets/MetaXR_Samples/MetaXRDemoApp を参照してください。
 
 #### 手順
+
+ハンドトラッキングが必要な場合は (Option H)、コントローラートラッキングが必要な場合は (Option C) を行ってください。
 
 1. Packages/manifest.json に以下の依存を追加する (バージョンは書き換える)
     ```
@@ -120,16 +127,20 @@ Prefab
 4. Scene を作成する
    1. メニューから Oculus > Tools > Building Blocks と選択し、以下を追加する
       - Camera Rig
-      - Hand Tracking
+      - (Option H) Hand Tracking
+      - (Option C) Controller Tracking
    2. Packages/VRMarionette MetaXR/Runtime/VrmMarionetteHand prefab を 2 つ追加する
       - それぞれ Left, Right 用
       - 以降 VrmMarionetteHand と呼ぶ
-   3. VrmMarionetteHand の Skeleton に以下を設定する
+   3. (Option H) VrmMarionetteHand の Hand に以下を設定する
       - Hand Tracking left
       - Hand Tracking right
-   4. Game Object を作成する
+   4. (Option C) VrmMarionetteHand の Controller に以下を設定する
+      - Controller Tracking left
+      - Controller Tracking right
+   5. Game Object を作成する
       - 以降 VRM Model と呼ぶ
-   5. VRM Model に VrmLoader Script を追加し、以下を設定する
+   6. VRM Model に VrmLoader Script を追加し、以下を設定する
       - Vrm File Name
       - Spring Bone Collider Groups
          - VrmMarionetteHand
@@ -139,56 +150,85 @@ Prefab
          - Packages/VRMarionette/Runtime/ScriptableObjects/HumanLimitContainer
       - Force Fields
          - Packages/VRMarionette/Runtime/ScriptableObjects/ForceFieldContainer
-   6. VRM Model の位置と回転を調整する
+   7. VRM Model の位置と回転を調整する
       - 例えば、Position z=1, Rotation y=180
 5. Build Settings を開く
    - Android に Switch Platform
    - Build And Run
+
+### コントローラーで摘まみ操作を有効にする場合
+
+以下を追加で行ってください。
+
+1. Assembly Definition を作成し、以下を設定する
+    - Assembly Definition References
+        - VRMarionette.MetaXR
+        - Oculus.VR
+2. GrabSupport Script を作成する (以下は例です)
+   ```
+   using UnityEngine;
+   using VRMarionette.MetaXR;
+       
+   public class GrabSupport : MonoBehaviour
+   {
+       public VrmMarionetteHand leftHand;
+       public VrmMarionetteHand rightHand;
+
+       public void Update()
+       {
+           leftHand.Grab(OVRInput.Get(OVRInput.Button.PrimaryHandTrigger));
+           rightHand.Grab(OVRInput.Get(OVRInput.Button.SecondaryHandTrigger));
+       }
+   }
+   ```
+3. Scene を編集する
+   - Game Object を作成し、Grab Support を追加する
+      - Left Hand, Right Hand に VrmMarionetteHand を設定する
 
 ### 接触した部位をフォーカスする場合
 
 以下を追加で行ってください。
 
 1. Packages/manifest.json に以下の依存を追加する (バージョンは書き換える)
-    ```
-    "com.github.nosix.vrm.util": "https://github.com/nosix/UniVRMarionette.git?path=/Assets/Util#[VRMarionetteバージョン]",
-    ```
-2. Scene を編集する
-    1. Packages/VRMarionette Util/Runtime/Capsule prefab を 2 つ追加する
-        - それぞれ Left, Right 用
-        - Color の alpha を 0 にして非表示にする
-          (Capsule の Color はデフォルト色であり、実行中に設定される色は VrmMarionetteHand で指定する)
-        - Duration を 1 にして表示時間を 1 秒にする
-        - 以降 FocusIndicator と呼ぶ
-    2. Assembly Definition を作成し、以下を設定する
-        - Assembly Definition References
-            - VRMarionette
-            - VRMarionette.Util
-    3. FocusIndicator Script を作成する
-       ```
-       using UnityEngine;
-       using VRMarionette;
-       using VRMarionette.Util;
+   ```
+   "com.github.nosix.vrm.util": "https://github.com/nosix/UniVRMarionette.git?path=/Assets/Util#[VRMarionetteバージョン]",
+   ```
+2. Assembly Definition を作成し、以下を設定する
+   - Assembly Definition References
+      - VRMarionette
+      - VRMarionette.Util
+3. FocusIndicator Script を作成する (以下は例です)
+   ```
+   using UnityEngine;
+   using VRMarionette;
+   using VRMarionette.Util;
        
-       public class FocusIndicator : MonoBehaviour, IFocusIndicator
+   public class FocusIndicator : MonoBehaviour, IFocusIndicator
+   {
+       public Capsule capsule;
+       
+       public Transform Transform => capsule.transform;
+       
+       public Color Color
        {
-           public Capsule capsule;
-       
-           public Transform Transform => capsule.transform;
-       
-           public Color Color
-           {
-               set => capsule.Color = value;
-           }
-       
-           public void SetCapsule(CapsuleCollider capsuleCollider)
-           {
-               capsule.SetCapsule(capsuleCollider);
-           }
+           set => capsule.Color = value;
        }
-       ```
-    4. VrmMarionetteHand の Palm に FocusIndicator Script を追加する
-        - Capsule に FocusIndicator を設定する
+       
+       public void SetCapsule(CapsuleCollider capsuleCollider)
+       {
+           capsule.SetCapsule(capsuleCollider);
+       }
+   }
+   ```
+4. Scene を編集する
+   1. Packages/VRMarionette Util/Runtime/Capsule prefab を 2 つ追加する
+      - それぞれ Left, Right 用
+      - Color の alpha を 0 にして非表示にする
+        (Capsule の Color はデフォルト色であり、実行中に設定される色は VrmMarionetteHand で指定する)
+      - Duration を 1 にして表示時間を 1 秒にする
+      - 以降 FocusIndicator と呼ぶ
+   2. VrmMarionetteHand の Palm に FocusIndicator Script を追加する
+      - Capsule に FocusIndicator を設定する
 
 ## バージョン
 

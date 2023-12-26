@@ -22,6 +22,7 @@
    2. Oculus > Tools > Building Blocks
       - Camera Rig
       - Hand Tracking
+      - Controller Tracking
       - (Option) Passthrough
    3. Camera Rig を編集する
       - OVR Manager
@@ -33,7 +34,7 @@
       - 左手(LeftFocusIndicator)
       - 右手(RightFocusIndicator)
    6. Game Object を作成し VRM Model と命名する
-      1. VrmLoader を追加する
+      1. VrmLoader Script を追加する
       2. Vrm File Name を設定する
          - Assets/StreamingAssets に置いたファイルの名前を指定する
       3. Human Limits を設定する
@@ -46,5 +47,11 @@
       6. Force Sources を設定する
          - LeftVrmMarionetteHand の Palm
          - RightVrmMarionetteHand の Palm
-   7. VrmMarionetteHand の Palm に FocusIndicator を追加する
+   7. VrmMarionetteHand Component を編集する
+      - Hand に [Building Block] Hand Tracking を指定する 
+      - Controller に [Building Block] Controller Tracking を指定する
+   8. VrmMarionetteHand の Palm に FocusIndicator を追加する
       - Capsule に FocusIndicator の Capsule を指定する
+   9. Game Object を作成し GrabSupport と命名する
+      - GrabSupport Script を追加する
+         - Left Hand と Right Hand を設定する
