@@ -38,6 +38,8 @@ namespace VRMarionette.MetaXR
         private bool _isHandTracking;
         private bool _isGrabbing;
 
+        private bool IsTracked => hand is not null && hand.IsTracked;
+
         private IEnumerator Start()
         {
             _dstPalmTransform = palm.transform;
@@ -79,7 +81,7 @@ namespace VRMarionette.MetaXR
         private void Update()
         {
             // Controller に切り替える
-            if (_isHandTracking && !hand.IsTracked)
+            if (_isHandTracking && !IsTracked)
             {
                 _isHandTracking = false;
                 _dstThumbTransform.gameObject.SetActive(false);
@@ -88,7 +90,7 @@ namespace VRMarionette.MetaXR
             }
 
             // Hand Tracking に切り替える
-            if (!_isHandTracking && hand.IsTracked)
+            if (!_isHandTracking && IsTracked)
             {
                 _isHandTracking = true;
                 _dstThumbTransform.gameObject.SetActive(true);
