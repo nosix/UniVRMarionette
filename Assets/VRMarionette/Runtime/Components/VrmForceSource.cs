@@ -36,17 +36,10 @@ namespace VRMarionette
         private Vector3 _prevPosition;
         private Quaternion _prevRotation;
 
-        private void Start()
+        public void Initialize(VrmForceGenerator forceGenerator)
         {
             _collider = GetComponent<SphereCollider>();
             _focusIndicator = GetComponent<IFocusIndicator>();
-
-            // Initialize を実行するまでは Trigger を無効にする
-            _collider.isTrigger = false;
-        }
-
-        public void Initialize(VrmForceGenerator forceGenerator)
-        {
             _forceGenerator = forceGenerator;
             _collider.isTrigger = true;
             _isInitialized = true;
