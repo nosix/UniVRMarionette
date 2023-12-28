@@ -4,25 +4,29 @@ using VRMarionette;
 
 namespace MetaXR_Sample.MetaXRDemoApp
 {
-    public class RigidbodyMode : MonoBehaviour
+    public class MarionetteOption : MonoBehaviour
     {
-        public bool on;
+        public bool useRemainingForceForMovement;
+        public bool useRigidbody;
 
         private VrmRigidbody _rigidbody;
 
         public void Initialize(Vrm10Instance instance)
         {
+            var forceGenerator = instance.GetComponent<VrmForceGenerator>();
+            forceGenerator.useRemainingForceForMovement = useRemainingForceForMovement;
+
             _rigidbody = instance.GetComponent<VrmRigidbody>();
-            _rigidbody.isKinematic = !on;
+            _rigidbody.isKinematic = !useRigidbody;
         }
 
         public void OnFocus(FocusEvent focusEvent)
         {
             if (_rigidbody is null) return;
 
-            if (!on)
+            if (!useRigidbody)
             {
-                _rigidbody.isKinematic = !on;
+                _rigidbody.isKinematic = !useRigidbody;
                 return;
             }
 

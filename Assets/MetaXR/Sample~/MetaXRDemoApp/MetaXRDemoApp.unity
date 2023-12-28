@@ -4845,8 +4845,8 @@ MonoBehaviour:
   onLoaded:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1263210357}
-        m_TargetAssemblyTypeName: MetaXR_Sample.MetaXRDemoApp.RigidbodyMode, MetaXRDemoApp
+      - m_Target: {fileID: 1263210359}
+        m_TargetAssemblyTypeName: MetaXR_Sample.MetaXRDemoApp.MarionetteOption, MetaXRDemoApp
         m_MethodName: Initialize
         m_Mode: 0
         m_Arguments:
@@ -7186,26 +7186,14 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1263210358}
-  - component: {fileID: 1263210357}
+  - component: {fileID: 1263210359}
   m_Layer: 0
-  m_Name: RigidbodyMode
+  m_Name: MarionetteOption
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1263210357
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1263210356}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3ec395a864884227a2b238433e157555, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!4 &1263210358
 Transform:
   m_ObjectHideFlags: 0
@@ -7221,6 +7209,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1263210359
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1263210356}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ec395a864884227a2b238433e157555, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  useRemainingForceForMovement: 0
+  useRigidbody: 0
 --- !u!1 &1267930829
 GameObject:
   m_ObjectHideFlags: 0
@@ -11334,7 +11336,7 @@ PrefabInstance:
         type: 3}
       propertyPath: onFocus.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 1263210357}
+      objectReference: {fileID: 1263210359}
     - target: {fileID: 7058272015344992995, guid: 6d23ff9771f224988a128295d935b05e,
         type: 3}
       propertyPath: onFocus.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
@@ -11348,7 +11350,7 @@ PrefabInstance:
     - target: {fileID: 7058272015344992995, guid: 6d23ff9771f224988a128295d935b05e,
         type: 3}
       propertyPath: onFocus.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
-      value: MetaXR_Sample.MetaXRDemoApp.RigidbodyMode, MetaXRDemoApp
+      value: MetaXR_Sample.MetaXRDemoApp.MarionetteOption, MetaXRDemoApp
       objectReference: {fileID: 0}
     - target: {fileID: 7058272015344992995, guid: 6d23ff9771f224988a128295d935b05e,
         type: 3}
@@ -11996,7 +11998,7 @@ PrefabInstance:
         type: 3}
       propertyPath: onFocus.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 1263210357}
+      objectReference: {fileID: 1263210359}
     - target: {fileID: 7058272015344992995, guid: 6d23ff9771f224988a128295d935b05e,
         type: 3}
       propertyPath: onFocus.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
@@ -12010,7 +12012,7 @@ PrefabInstance:
     - target: {fileID: 7058272015344992995, guid: 6d23ff9771f224988a128295d935b05e,
         type: 3}
       propertyPath: onFocus.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
-      value: MetaXR_Sample.MetaXRDemoApp.RigidbodyMode, MetaXRDemoApp
+      value: MetaXR_Sample.MetaXRDemoApp.MarionetteOption, MetaXRDemoApp
       objectReference: {fileID: 0}
     - target: {fileID: 7058272015344992995, guid: 6d23ff9771f224988a128295d935b05e,
         type: 3}
@@ -12105,6 +12107,6 @@ SceneRoots:
   - {fileID: 2139949402}
   - {fileID: 1041616409}
   - {fileID: 1111586876}
-  - {fileID: 2010458317}
   - {fileID: 1263210358}
+  - {fileID: 2010458317}
   - {fileID: 1165108603}

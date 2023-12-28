@@ -8,6 +8,10 @@ namespace VRMarionette
 {
     public class VrmForceGenerator : MonoBehaviour
     {
+        [Tooltip("The force not used for joint rotation is applied to movement.")]
+        public bool useRemainingForceForMovement;
+
+        [Space]
         public bool verbose;
 
         public BoneProperties BoneProperties { get; private set; }
@@ -289,6 +293,8 @@ namespace VRMarionette
             {
                 Debug.Log($"RemainingForce: {force}");
             }
+
+            if (useRemainingForceForMovement) _instanceTransform.position += force;
         }
 
         /// <summary>
