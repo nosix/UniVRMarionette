@@ -6,30 +6,15 @@ using UniVRM10;
 
 namespace VRMarionette
 {
-    public class VrmLoader : MonoBehaviour
+    public class VrmLoader : VrmMarionetteBuilder
     {
         public string vrmFileName;
-
-        [Space]
-        public VRM10SpringBoneColliderGroup[] springBoneColliderGroups;
-
-        [Space]
-        public VrmForceSource[] forceSources;
-
-        [Space]
-        public HumanLimitContainer humanLimits;
-
-        public ForceFieldContainer forceFields;
-
-        public BodyWeightContainer bodyWeights;
 
         [Space]
         public UnityEvent<Vrm10Instance> onLoaded;
 
         [Space]
         public bool enableMixer;
-
-        public bool verbose;
 
         private void Start()
         {
@@ -41,38 +26,7 @@ namespace VRMarionette
             var bytes = await ReadVrmBytesAsync(vrmFileName);
             var instance = await Vrm10.LoadBytesAsync(bytes);
 
-            // モデルと相互作用する Collider を設定する
-            foreach (var spring in instance.SpringBone.Springs)
-            {
-                spring.ColliderGroups.AddRange(springBoneColliderGroups);
-            }
-
-            // SpringBone の設定を変更した後に再構築が必要
-            instance.Runtime.ReconstructSpringBone();
-
-            if (humanLimits)
-            {
-                // ControlRig を操作する機能を追加する
-                instance.gameObject.AddComponent<VrmControlRigManipulator>().Initialize(instance, humanLimits);
-            }
-
-            if (forceFields)
-            {
-                // Collider の衝突により力を働かせる機能を追加する
-                var forceGenerator = instance.gameObject.AddComponent<VrmForceGenerator>();
-                forceGenerator.Initialize(instance, forceFields);
-                forceGenerator.verbose = verbose;
-                foreach (var forceSource in forceSources)
-                {
-                    forceSource.Initialize(forceGenerator);
-                }
-            }
-
-            if (bodyWeights)
-            {
-                // 重力の演算をする機能を追加する
-                instance.gameObject.AddComponent<VrmRigidbody>().Initialize(instance, bodyWeights);
-            }
+            Build(instance);
 
             if (enableMixer)
             {
@@ -95,9 +49,7 @@ namespace VRMarionette
             onLoaded.Invoke(instance);
         }
 
-        /**
-         * Assets/StreamingAssets に置かれたファイルを読み込む。
-         */
+        // Assets/StreamingAssets に置かれたファイルを読み込む。
         private static async Task<byte[]> ReadVrmBytesAsync(string fileName)
         {
             var path = Path.Combine(Application.streamingAssetsPath, fileName);
