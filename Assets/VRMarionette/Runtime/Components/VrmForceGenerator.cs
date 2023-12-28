@@ -38,81 +38,97 @@ namespace VRMarionette
                 throw new InvalidOperationException("The VrmInstance has not VrmControlRigManipulator component.");
             }
 
-            if (!instance.Runtime.ControlRig.Bones.TryGetValue(HumanBodyBones.Hips, out var hipsBone))
+            var animator = instance.GetComponent<Animator>();
+            if (!animator)
+            {
+                throw new InvalidOperationException("The VrmInstance has not Animator component.");
+            }
+
+            var hipsBone = animator.GetBoneTransform(HumanBodyBones.Hips);
+            if (!hipsBone)
             {
                 throw new InvalidOperationException("The ControlRig has not hips bone.");
             }
 
-            _rootTransform = hipsBone.ControlBone.transform;
+            _rootTransform = hipsBone;
 
             instance.gameObject.AddComponent<Rigidbody>().isKinematic = true;
 
             var bonePropertiesBuilder = new BoneProperties.Builder();
 
-            CreateColliderRecursively(
+            CreateColliderForEachBones(
+                animator,
                 forceFields.forceFields.ToDictionary(e => e.bone, e => e),
-                bonePropertiesBuilder,
-                hipsBone
+                bonePropertiesBuilder
             );
 
             BoneProperties = bonePropertiesBuilder.Build();
         }
 
-        private static void CreateColliderRecursively(
+        private static void CreateColliderForEachBones(
+            Animator animator,
             IReadOnlyDictionary<HumanBodyBones, ForceField> forceFields,
-            BoneProperties.Builder bonePropertiesBuilder,
-            Vrm10ControlBone headBone
+            BoneProperties.Builder bonePropertiesBuilder
         )
         {
-            var tailBones = headBone.Children;
-
-            if (forceFields.TryGetValue(headBone.BoneType, out var forceField))
+            for (HumanBodyBones bone = 0; bone < HumanBodyBones.LastBone; bone++)
             {
-                if (headBone.BoneType == HumanBodyBones.Head)
+                var boneTransform = animator.GetBoneTransform(bone);
+                if (boneTransform is null) continue;
+                if (forceFields.TryGetValue(bone, out var forceField))
                 {
-                    bonePropertiesBuilder.Add(
-                        headBone,
-                        CreateHeadCapsule(forceField, headBone)
-                    );
+                    if (bone == HumanBodyBones.Head)
+                    {
+                        bonePropertiesBuilder.Add(
+                            bone,
+                            boneTransform,
+                            CreateHeadCapsule(forceField, boneTransform)
+                        );
+                    }
+                    else
+                    {
+                        switch (boneTransform.childCount)
+                        {
+                            case 1:
+                                bonePropertiesBuilder.Add(
+                                    bone,
+                                    boneTransform,
+                                    CreateCapsuleForSingleChildBone(
+                                        forceField,
+                                        headBoneTransform: boneTransform,
+                                        tailBoneTransform: boneTransform.GetChild(0)
+                                    )
+                                );
+                                break;
+                            case > 1:
+                                bonePropertiesBuilder.Add(
+                                    bone,
+                                    boneTransform,
+                                    CreateCapsuleForMultiChildrenBone(
+                                        forceField,
+                                        headBoneTransform: boneTransform,
+                                        tailBoneTransforms: boneTransform.GetChildren()
+                                    )
+                                );
+                                break;
+                        }
+                    }
                 }
                 else
                 {
-                    switch (tailBones.Count)
-                    {
-                        case 1:
-                            bonePropertiesBuilder.Add(
-                                headBone,
-                                CreateCapsuleForSingleChildBone(forceField, headBone, tailBones[0])
-                            );
-                            break;
-                        case > 1:
-                            bonePropertiesBuilder.Add(
-                                headBone,
-                                CreateCapsuleForMultiChildrenBone(forceField, headBone, tailBones)
-                            );
-                            break;
-                    }
+                    bonePropertiesBuilder.Add(bone, boneTransform, null);
                 }
-            }
-            else
-            {
-                bonePropertiesBuilder.Add(headBone, null);
-            }
-
-            foreach (var tailBone in tailBones)
-            {
-                CreateColliderRecursively(forceFields, bonePropertiesBuilder, tailBone);
             }
         }
 
         private static CapsuleCollider CreateCapsuleForSingleChildBone(
             ForceField forceField,
-            Vrm10ControlBone headBone,
-            Vrm10ControlBone tailBone
+            Transform headBoneTransform,
+            Transform tailBoneTransform
         )
         {
-            var headPosition = headBone.ControlBone.position;
-            var tailPosition = tailBone.ControlBone.position;
+            var headPosition = headBoneTransform.position;
+            var tailPosition = tailBoneTransform.position;
             var localTailPosition = tailPosition - headPosition;
             var height = forceField.direction switch
             {
@@ -122,7 +138,7 @@ namespace VRMarionette
                 _ => throw new ArgumentOutOfRangeException()
             };
             return AddCapsuleCollider(
-                headBone.ControlBone.gameObject,
+                headBoneTransform.gameObject,
                 (tailPosition - headPosition) / 2f + forceField.centerOffset,
                 height,
                 forceField.radius,
@@ -132,12 +148,13 @@ namespace VRMarionette
 
         private static CapsuleCollider CreateCapsuleForMultiChildrenBone(
             ForceField forceField,
-            Vrm10ControlBone headBone,
-            IEnumerable<Vrm10ControlBone> tailBones
+            Transform headBoneTransform,
+            IEnumerable<Transform> tailBoneTransforms
         )
         {
-            var localPositions =
-                tailBones.Select(tailBone => tailBone.ControlBone.position - headBone.ControlBone.position).ToList();
+            var localPositions = tailBoneTransforms
+                .Select(tailBoneTransform => tailBoneTransform.position - headBoneTransform.position)
+                .ToList();
             var minX = localPositions.Min(p => p.x);
             var maxX = localPositions.Max(p => p.x);
             var minY = localPositions.Min(p => p.y);
@@ -153,7 +170,7 @@ namespace VRMarionette
                 _ => throw new ArgumentOutOfRangeException()
             };
             return AddCapsuleCollider(
-                headBone.ControlBone.gameObject,
+                headBoneTransform.gameObject,
                 center + forceField.centerOffset,
                 height,
                 forceField.radius,
@@ -161,7 +178,7 @@ namespace VRMarionette
             );
         }
 
-        private static CapsuleCollider CreateHeadCapsule(ForceField forceField, Vrm10ControlBone headBone)
+        private static CapsuleCollider CreateHeadCapsule(ForceField forceField, Transform boneTransform)
         {
             var tailLocalPosition = forceField.centerOffset * 2f;
             var height = forceField.direction switch
@@ -172,7 +189,7 @@ namespace VRMarionette
                 _ => throw new ArgumentOutOfRangeException()
             };
             return AddCapsuleCollider(
-                headBone.ControlBone.gameObject,
+                boneTransform.gameObject,
                 forceField.centerOffset,
                 height,
                 forceField.radius,

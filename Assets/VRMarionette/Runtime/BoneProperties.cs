@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UniVRM10;
 
 namespace VRMarionette
 {
@@ -37,9 +36,9 @@ namespace VRMarionette
         {
             private readonly Dictionary<Transform, BoneProperty> _properties = new();
 
-            public void Add(Vrm10ControlBone bone, CapsuleCollider collider)
+            public void Add(HumanBodyBones bone, Transform boneTransform, CapsuleCollider collider)
             {
-                _properties.Add(bone.ControlBone, new BoneProperty(bone.ControlBone, bone.BoneType, collider, null));
+                _properties.Add(boneTransform, new BoneProperty(boneTransform, bone, collider, null));
             }
 
             public BoneProperties Build()

@@ -14,13 +14,18 @@ namespace VRMarionette
     /// </summary>
     public class VrmControlRigManipulator : MonoBehaviour
     {
-        private Vrm10Instance _vrmInstance;
+        private Animator _animator;
         private HumanLimits _humanLimits;
         private BoneGroups _boneGroups;
 
-        public void Initialize(Vrm10Instance vrmInstance, HumanLimitContainer humanLimits)
+        public void Initialize(Vrm10Instance instance, HumanLimitContainer humanLimits)
         {
-            _vrmInstance = vrmInstance;
+            _animator = instance.GetComponent<Animator>();
+            if (!_animator)
+            {
+                throw new InvalidOperationException("The VrmInstance has not Animator component.");
+            }
+
             _humanLimits = new HumanLimits(humanLimits);
             _boneGroups = new BoneGroups(_humanLimits);
         }
@@ -253,10 +258,11 @@ namespace VRMarionette
         /// <returns>回転した角度</returns>
         private Vector3 SetLocalEulerAngle(HumanBodyBones bone, Vector3 angle)
         {
-            if (!_vrmInstance.Runtime.ControlRig.Bones.TryGetValue(bone, out var boneInstance)) return Vector3.zero;
+            var boneTransform = _animator.GetBoneTransform(bone);
+            if (!boneTransform) return Vector3.zero;
             var nextAngle = _humanLimits.ClampAngle(bone, angle);
             var rotatedAngle = nextAngle - GetLocalEulerAngle(bone);
-            boneInstance.ControlBone.localEulerAngles = nextAngle;
+            boneTransform.localEulerAngles = nextAngle;
             return rotatedAngle;
         }
 
@@ -270,10 +276,11 @@ namespace VRMarionette
 
         private Vector3 GetLocalEulerAngle(HumanBodyBones bone)
         {
-            if (!_vrmInstance.Runtime.ControlRig.Bones.TryGetValue(bone, out var boneInstance)) return Vector3.zero;
+            var boneTransform = _animator.GetBoneTransform(bone);
+            if (!boneTransform) return Vector3.zero;
             // 一つのクォータニオンに対して複数のオイラー角があり得るので候補の中から最適なオイラー角を選ぶ
             // 正規化した角度を制限範囲内に補正した上で差分が最も小さかったオイラー角を最適と判断する
-            var candidate1 = boneInstance.ControlBone.localEulerAngles;
+            var candidate1 = boneTransform.localEulerAngles;
             var candidate2 = new Vector3(180f - candidate1.x, candidate1.y + 180f, candidate1.z + 180f);
             var normalized1 = NormalizeAngles(candidate1);
             var normalized2 = NormalizeAngles(candidate2);

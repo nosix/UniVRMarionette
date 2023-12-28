@@ -46,30 +46,34 @@ namespace VRMarionette
 
             _rigidbody.useGravity = true;
 
-            var bones = instance.Runtime.ControlRig.Bones;
+            var animator = instance.GetComponent<Animator>();
 
-            if (!bones.TryGetValue(HumanBodyBones.Hips, out var hipsBone)) throw new InvalidOperationException();
-            _hipsTransform = hipsBone.ControlTarget;
-            _weightUnits = ToWeightUnitList(bones, new BodyWeights(bodyWeights));
+            if (!animator)
+            {
+                throw new InvalidOperationException("The VrmInstance has not Animator component.");
+            }
+
+            _hipsTransform = animator.GetBoneTransform(HumanBodyBones.Hips)
+                             ?? throw new InvalidOperationException();
+
+            _weightUnits = ToWeightUnitList(animator, new BodyWeights(bodyWeights));
 
             _initialized = true;
 
             LockRotation();
         }
 
-        private static IReadOnlyList<WeightUnit> ToWeightUnitList(
-            IReadOnlyDictionary<HumanBodyBones, Vrm10ControlBone> bones,
-            BodyWeights bodyWeights
-        )
+        private static IReadOnlyList<WeightUnit> ToWeightUnitList(Animator animator, BodyWeights bodyWeights)
         {
-            return bones.Values
-                .Select(e => new WeightUnit
+            return Enumerable.Range(0, (int)HumanBodyBones.LastBone - 1)
+                .Cast<HumanBodyBones>()
+                .Select(bone => new WeightUnit
                     {
-                        BoneTransform = e.ControlTarget,
-                        Weight = bodyWeights.Get(e.BoneType)
+                        BoneTransform = animator.GetBoneTransform(bone),
+                        Weight = bodyWeights.Get(bone)
                     }
                 )
-                .Where(e => e.Weight != 0f)
+                .Where(e => e.Weight != 0f && e.BoneTransform is not null)
                 .ToList();
         }
 
