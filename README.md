@@ -2,7 +2,8 @@
 
 UniVRMarionette は UniVRM に対応したモデルに触れて操作する機能を提供する Unity 用ライブラリです。
 
-Meta Quest 3 で動作確認していますが、他の環境でも使用できると思います。
+現在は VRM モデルをランタイムロードした場合にのみ対応しています。
+また、Meta Quest 3 で動作確認していますが、他の環境でも使用できるかは不明です。
 (試した結果を Discussions で教えて頂けると助かります。)
 
 ## 機能
@@ -57,7 +58,6 @@ Components
    - ground に設定すると接地している位置を可視化可能(デバッグ用)
 - VrmLoader
    - モデルを [ランタイムロード](https://vrm-c.github.io/UniVRM/ja/api/0_44_runtime_import.html) する Component
-   - ランタイムロードを使用しない場合は不要
    - Assets/StreamingAssets フォルダに置かれた VRM ファイルを読み込む
    - 初期化処理を行う (VrmLoader を使用しない場合は別途実装が必要)
       - 揺れ物と干渉する SpringBone の設定 (springBoneColliderGroups を使用)
