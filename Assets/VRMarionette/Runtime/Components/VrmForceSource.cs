@@ -84,15 +84,22 @@ namespace VRMarionette
 
         private void Focus(CapsuleCollider capsule, bool on)
         {
+            // 摘まみ状態ではフォーカスを変更しない
+            if (_holdCollider is not null) return;
+
+            // 身体部位に設定した CapsuleCollider 以外の場合は無視する
             if (!_forceGenerator.BoneProperties.TryGetValue(capsule.transform, out var nextBoneProperty)) return;
 
-            if (_targetCapsule is not null &&
-                _forceGenerator.BoneProperties.TryGetValue(_targetCapsule.transform, out var prevBoneProperty))
+            var nextFocusColor = Color.clear;
+
+            if (_targetCapsule is not null)
             {
-                // フォーカスする場合は targetCapsule と capsule が異なる場合に現在のフォーカスを外す
-                // フォーカスを外す場合は targetCapsule と capsule が同一の場合にフォーカスを外す
+                // フォーカスを外す
+                // フォーカス ON の場合は targetCapsule と capsule が異なる場合に
+                // フォーカス OFF の場合は targetCapsule と capsule が同じ場合に
                 if (on == (_targetCapsule != capsule))
                 {
+                    var prevBoneProperty = _forceGenerator.BoneProperties.Get(_targetCapsule.transform);
                     _targetCapsule = null;
                     onFocus.Invoke(new FocusEvent
                     {
@@ -111,12 +118,13 @@ namespace VRMarionette
                     Bone = nextBoneProperty.Bone,
                     On = true
                 });
+                nextFocusColor = focusColor;
             }
 
             if (_focusIndicator is null) return;
 
             _focusIndicator.SetCapsule(capsule);
-            _focusIndicator.Color = focusColor;
+            _focusIndicator.Color = nextFocusColor;
         }
 
         private void UpdateCapsule()
