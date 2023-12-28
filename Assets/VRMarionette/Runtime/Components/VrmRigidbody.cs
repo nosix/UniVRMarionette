@@ -136,8 +136,8 @@ namespace VRMarionette
 
             var centroidPosition = GetCentroidPosition(out var basePosition);
 
-            if (centroid is not null) centroid.position = basePosition + centroidPosition;
-            if (ground is not null) ground.position = basePosition;
+            if (centroid) centroid.position = basePosition + centroidPosition;
+            if (ground) ground.position = basePosition;
 
             var yAngle = _hipsTransform.eulerAngles.y;
             centroidPosition = Quaternion.Euler(0f, -yAngle, 0f) * centroidPosition;
