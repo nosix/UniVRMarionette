@@ -57,6 +57,11 @@
    9. Game Object を作成し GrabSupport と命名する
       - GrabSupport Script を追加する
          - Left Hand と Right Hand を設定する
-   10. Game Object を作成し RigidbodyMode と命名する
-      - RigidbodyMode Script を追加する
-         - 有効にする場合は on を true に設定する
+   10. Game Object を作成し MarionetteOption と命名する
+       - MarionetteOption Script を追加する
+          - VrmRigidbody を有効にする場合は Use Rigidbody を true に設定する
+          - 関節の回転に使われなかった力を移動に使う場合は Use Remaining Force を true に設定する
+   11. VRM Model の VrmLoader を編集する
+       - On Loaded に MarionetteOption の Initialize を追加する
+   12. VrmMarionetteHand の Palm の VrmForceSource を編集する
+       - On Focus に MarionetteOption の OnFocus を追加する

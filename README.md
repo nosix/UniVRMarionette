@@ -35,6 +35,7 @@ Components
    - Bone の回転には VrmControlRigManipulator を使用する
    - 各 Bone に CapsuleCollider を設定する
    - CapsuleCollider の位置や大きさは ForceFieldContainer で微調整可能
+   - useRemainingForceForMovement を true にすると関節の回転に適用されなかった力を移動に使用する
 - VrmForceSource
    - 回転や移動のトリガーとなる Component
    - SphereCollider を設定する
@@ -45,6 +46,15 @@ Components
      (押し操作のみ)
    - GameObject に IFocusIndicator を実装した Component が設定されている場合、
      OnTriggerEnter が発生した時にその Component に focusColor を設定する 
+- VrmRigidbody
+   - モデルの重心を計算して重力の影響を処理する機能を提供する
+   - 接地している位置と重心の位置が uprightThresholdDistance を超える場合は姿勢を崩す
+   - 接地している位置は y 座標が最も低い身体部位の位置を使用する
+      - 複数の部位の位置が同じ高さ(nearDistance 以内)の場合はそれらの位置の平均を使用する
+   - isKinematic が true になると重力の影響を受けなくなる
+      - Rigidbody の isKinematic が true になる
+   - centroid に設定すると重心の位置を可視化可能(デバッグ用)
+   - ground に設定すると接地している位置を可視化可能(デバッグ用)
 - VrmLoader
    - モデルを [ランタイムロード](https://vrm-c.github.io/UniVRM/ja/api/0_44_runtime_import.html) する Component
    - ランタイムロードを使用しない場合は不要
