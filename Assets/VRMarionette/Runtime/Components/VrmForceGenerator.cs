@@ -213,15 +213,15 @@ namespace VRMarionette
             return capsule;
         }
 
-        public void QueueForceGeneration(SphereCollider source, Collider target)
+        public void QueueForceToPush(SphereCollider source, Collider target)
         {
             var context = NewContext(source, target);
             if (context == null) return;
-            var force = CalculateForce(context);
+            var force = CalculateForceToPush(context);
             _forceGenerationQueue.Enqueue(new ForceGenerationTask(context, force));
         }
 
-        public void QueueForceGeneration(SphereCollider source, Collider target, Vector3 force, Quaternion rotation)
+        public void QueueForce(SphereCollider source, Collider target, Vector3 force, Quaternion rotation)
         {
             var context = NewContext(source, target);
             if (context == null) return;
@@ -302,6 +302,15 @@ namespace VRMarionette
                     break;
                 }
 
+                if (context.Bone is
+                    HumanBodyBones.LeftLowerArm or
+                    HumanBodyBones.RightLowerArm or
+                    HumanBodyBones.LeftLowerLeg or
+                    HumanBodyBones.RightLowerLeg)
+                {
+                    force = ApplyForceToLowerBone(context, force);
+                }
+
                 force = ApplyForceToBone(context, force);
                 context = context.Next(BoneProperties);
             }
@@ -320,7 +329,7 @@ namespace VRMarionette
         /// </summary>
         /// <param name="context">処理対象の状況</param>
         /// <returns>力を表すベクトル(大きさは移動量、座標系はワールド)</returns>
-        private Vector3 CalculateForce(Context context)
+        private Vector3 CalculateForceToPush(Context context)
         {
             // 『力の源の位置』のうち『力が作用する対象の軸』と直交する成分を求める
             var sourceFromAxis = context.SourceLocalPosition.OrthogonalComponent(context.TargetAxisDirection);
@@ -352,6 +361,149 @@ namespace VRMarionette
             }
 
             return context.ToWorldDirection(force);
+        }
+
+        /// <summary>
+        /// Upper と Lower で連動する骨に対して力を適用する。
+        /// </summary>
+        /// <param name="context">処理対象の状況</param>
+        /// <param name="force">力を表すベクトル(大きさは移動量、座標系はワールド)</param>
+        /// <returns>処理しきれなかった力を表すベクトル(大きさは移動量、座標系はワールド)</returns>
+        private Vector3 ApplyForceToLowerBone(Context context, Vector3 force)
+        {
+            // 連動して動かす方向を求める
+            // LowerBone の親と子を直線で結んだ方向が動かす方向になる
+            var movePath = context.ChildToParent;
+
+            // 動かす方向における力(移動量)を求める
+            var forceOnPath = force.ProjectOnto(movePath);
+            // movePath と同一方向ならば正、逆方向ならば負、量は forceOnPath の長さ
+            var moveAmount = Vector3.Dot(forceOnPath, movePath) / movePath.magnitude;
+
+            // Parent, Target, Child の 3 点の間の距離を求め、距離に基づいて角度を求める
+            // Child-Parent 間に点 P を設定して、2 つの直角三角形 Parent-Target-P と Child-Target-P を考える
+
+            var l = movePath.magnitude - moveAmount;
+            var pl = movePath.magnitude;
+            var hl1 = context.ChildToTarget.magnitude;
+            var hl2 = context.TargetToParent.magnitude;
+
+            // 移動後の配置において求める
+            if (!CalculateBaseLengthsForTriangles(
+                    l, // Child-Target 間の長さ
+                    hl1, // Target-Parent 間の長さ
+                    hl2, // Child-Parent 間の長さ
+                    out var l1, // Child-P 間の長さ
+                    out var l2 // P-Parent 間の長さ
+                )) return force;
+
+            // 移動前の配置において求める
+            if (!CalculateBaseLengthsForTriangles(
+                    pl, // Child-Target 間の長さ
+                    hl1, // Target-Parent 間の長さ
+                    hl2, // Child-Parent 間の長さ
+                    out var pl1, // Child-P 間の長さ
+                    out var pl2 // P-Parent 間の長さ
+                )) return force;
+
+            // 直角三角形の 2 辺の長さに基づいて、その間の角度を求める
+            var theta1 = Mathf.Acos(l1 / hl1);
+            var theta2 = Mathf.Acos(l2 / hl2);
+            var prevTheta1 = Mathf.Acos(pl1 / hl1);
+            var prevTheta2 = Mathf.Acos(pl2 / hl2);
+
+            // 回転角度を求める
+            var deltaAngle1 = (theta1 - prevTheta1) * Mathf.Rad2Deg;
+            var deltaAngle2 = (theta2 - prevTheta2) * Mathf.Rad2Deg;
+            deltaAngle1 += deltaAngle2;
+
+            if (verbose)
+            {
+                Debug.Log(
+                    $"ApplyForceToLowerBone: {context.Bone}, " +
+                    $"lowerDeltaAngle: {deltaAngle1} = {theta1 * Mathf.Rad2Deg} - {prevTheta1 * Mathf.Rad2Deg}, " +
+                    $"upperDeltaAngle: {deltaAngle2} = {theta2 * Mathf.Rad2Deg} - {prevTheta2 * Mathf.Rad2Deg}, " +
+                    $"totalLength: {l} = {l1} + {l2}, " +
+                    $"prevTotalLength: {pl} = {pl1} + {pl2}, " +
+                    $"lowerHypotenuse: {hl1}, " +
+                    $"upperHypotenuse: {hl2}, " +
+                    $"force: {force}"
+                );
+            }
+
+            var lowerBone = context.Bone;
+            var lowerRotationAngles = lowerBone switch
+            {
+                HumanBodyBones.LeftLowerLeg => new Vector3(deltaAngle1, 0, 0),
+                HumanBodyBones.RightLowerLeg => new Vector3(deltaAngle1, 0, 0),
+                HumanBodyBones.LeftLowerArm => new Vector3(0, deltaAngle1, 0),
+                HumanBodyBones.RightLowerArm => new Vector3(0, -deltaAngle1, 0),
+                _ => throw new InvalidOperationException($"This process cannot be performed on bone {lowerBone}.")
+            };
+
+            var upperBone = BoneProperties.Get(context.ParentTransform).Bone;
+            var upperRotationAngles = upperBone switch
+            {
+                HumanBodyBones.LeftUpperLeg => new Vector3(-deltaAngle2, 0, 0),
+                HumanBodyBones.RightUpperLeg => new Vector3(-deltaAngle2, 0, 0),
+                HumanBodyBones.LeftUpperArm => new Vector3(0, -deltaAngle2, 0),
+                HumanBodyBones.RightUpperArm => new Vector3(0, deltaAngle2, 0),
+                _ => throw new InvalidOperationException($"This process cannot be performed on bone {upperBone}.")
+            };
+
+            var actualLowerRotationAngles = _controlRigManipulator.Rotate(lowerBone, lowerRotationAngles);
+            var actualUpperRotationAngles = _controlRigManipulator.Rotate(upperBone, upperRotationAngles);
+            var actualMove = movePath - context.ChildToParent;
+
+            if (verbose)
+            {
+                Debug.Log(
+                    $"ApplyForceToLowerBone: {context.Bone}, " +
+                    $"actualMove: {actualMove}, " +
+                    $"actualLowerRotationAngles: {actualLowerRotationAngles}, " +
+                    $"actualUpperRotationAngles: {actualUpperRotationAngles}, " +
+                    $"lowerRotationAngles: {lowerRotationAngles}, " +
+                    $"upperRotationAngles: {upperRotationAngles}, " +
+                    $"force: {force}"
+                );
+            }
+
+            return force - actualMove;
+        }
+
+        /// <summary>
+        /// 高さが同じである 2 つの直角三角形の底辺の長さを計算する
+        /// </summary>
+        /// <param name="l">底辺の合計</param>
+        /// <param name="hl1">斜辺1</param>
+        /// <param name="hl2">斜辺2</param>
+        /// <param name="l1">底辺1</param>
+        /// <param name="l2">底辺2</param>
+        /// <returns>解が得られた場合は true</returns>
+        private static bool CalculateBaseLengthsForTriangles(float l, float hl1, float hl2, out float l1, out float l2)
+        {
+            l1 = 0f;
+            l2 = 0f;
+
+            // 2 つの直角三角形の高さが同じであることから、ピタゴラスの定理を使って
+            //   hl1^2 - l1^2 = hl2^2 - l2^2
+            // l = l1 + l2 なので
+            //   l1 = l/2 + (hl1^2 - hl2^2) / 2l
+            //   l2 = l/2 - (hl1^2 - hl2^2) / 2l
+            // a = hl1^2 - hl2^2 としたとき l1 > 0, l2 > 0 でなければならないので
+            //   l + a/l > 0
+            //   l - a/l > 0
+            // となる必要があり、a が正の場合は l > a/l、負の場合は l > -a/l でなければならない
+            var a = Mathf.Pow(hl1, 2) - Mathf.Pow(hl2, 2);
+
+            if (l <= Mathf.Abs(a) / l) return false;
+
+            var b = l / 2f;
+            var c = a / (2f * l);
+            l1 = b + c;
+            l2 = b - c;
+
+            return hl1 > l1 && hl2 > l2;
         }
 
         /// <summary>
@@ -394,7 +546,7 @@ namespace VRMarionette
             if (verbose)
             {
                 Debug.Log(
-                    $"Rotate: {context.Bone}, " +
+                    $"ApplyForceToBone: {context.Bone}, " +
                     $"actualLocalMove: {actualLocalMove}, " +
                     $"actualRotationAngle: {actualRotationAngle}, " +
                     $"expectedRotationAngle: {rotation.eulerAngles}, " +
@@ -416,7 +568,7 @@ namespace VRMarionette
             if (verbose)
             {
                 Debug.Log(
-                    $"Rotate: {context.Bone}, " +
+                    $"ApplyAxisRotationToBone: {context.Bone}, " +
                     $"actualRotationAngle: {actualRotationAngle.magnitude}, " +
                     $"expectedRotationAngle: {rotationAngle}"
                 );
@@ -438,7 +590,7 @@ namespace VRMarionette
             if (verbose)
             {
                 Debug.Log(
-                    $"Rotate: {context.Bone}, " +
+                    $"ApplyRotationToBone: {context.Bone}, " +
                     $"actualRotationAngles: {actualRotationAngles}, " +
                     $"expectedRotationAngles: {eulerAngles}"
                 );
@@ -507,6 +659,39 @@ namespace VRMarionette
             /// 骨の Root (Hips) の Transform
             /// </summary>
             private Transform RootTransform { get; }
+
+            /// <summary>
+            /// TargetTransform の子から親へのベクトル (World 座標系)
+            /// </summary>
+            public Vector3 ChildToParent
+            {
+                get
+                {
+                    var childPosition = TargetTransform.GetChild(0).position;
+                    var parentPosition = TargetTransform.parent.position;
+                    return parentPosition - childPosition;
+                }
+            }
+
+            public Vector3 ChildToTarget
+            {
+                get
+                {
+                    var childPosition = TargetTransform.GetChild(0).position;
+                    return TargetTransform.position - childPosition;
+                }
+            }
+
+            public Vector3 TargetToParent
+            {
+                get
+                {
+                    var parentPosition = TargetTransform.parent.position;
+                    return parentPosition - TargetTransform.position;
+                }
+            }
+
+            public Transform ParentTransform => TargetTransform.parent;
 
             public Context(SphereCollider source, BoneProperty target, Transform rootTransform)
             {

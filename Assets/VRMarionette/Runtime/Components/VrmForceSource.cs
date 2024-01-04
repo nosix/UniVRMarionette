@@ -53,7 +53,7 @@ namespace VRMarionette
 
             if (!hold && !_holdOff && onEnter)
             {
-                _forceGenerator.QueueForceGeneration(_collider, other);
+                _forceGenerator.QueueForceToPush(_collider, other);
             }
         }
 
@@ -77,7 +77,7 @@ namespace VRMarionette
                     _prevRotation = t.rotation;
                     return;
                 case false when !_holdOff && !onEnter:
-                    _forceGenerator.QueueForceGeneration(_collider, other);
+                    _forceGenerator.QueueForceToPush(_collider, other);
                     break;
             }
         }
@@ -161,7 +161,7 @@ namespace VRMarionette
             var currRotation = t.rotation;
             var force = currPosition - _prevPosition;
             var rotation = currRotation * Quaternion.Inverse(_prevRotation);
-            _forceGenerator.QueueForceGeneration(_collider, _holdCollider, force, rotation);
+            _forceGenerator.QueueForce(_collider, _holdCollider, force, rotation);
             _prevPosition = currPosition;
             _prevRotation = currRotation;
         }
