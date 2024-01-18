@@ -4832,7 +4832,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb59156c19ef40c59767318161daa87e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  vrmFileName: model.vrm
   springBoneColliderGroups:
   - {fileID: 1687255091}
   - {fileID: 1988020681}
@@ -4842,12 +4841,13 @@ MonoBehaviour:
   humanLimits: {fileID: 11400000, guid: f1ad93ed4205647ac91f95ca97a67c08, type: 2}
   forceFields: {fileID: 11400000, guid: bc3aad8d5468f4af2b0c8a39cb7221c3, type: 2}
   bodyWeights: {fileID: 11400000, guid: 6b9b2c03508ff4097aa87f391650bc38, type: 2}
+  vrmFileName: model.vrm
   onLoaded:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1263210359}
-        m_TargetAssemblyTypeName: MetaXR_Sample.MetaXRDemoApp.MarionetteOption, MetaXRDemoApp
-        m_MethodName: Initialize
+        m_TargetAssemblyTypeName: VRMarionette.VrmMarionetteConfig, VRMarionette
+        m_MethodName: Setup
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -4857,8 +4857,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  enableMixer: 0
-  verbose: 0
 --- !u!4 &811606291
 Transform:
   m_ObjectHideFlags: 0
@@ -7188,7 +7186,7 @@ GameObject:
   - component: {fileID: 1263210358}
   - component: {fileID: 1263210359}
   m_Layer: 0
-  m_Name: MarionetteOption
+  m_Name: MarionetteConfig
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7218,11 +7216,17 @@ MonoBehaviour:
   m_GameObject: {fileID: 1263210356}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3ec395a864884227a2b238433e157555, type: 3}
+  m_Script: {fileID: 11500000, guid: 114e82cc7a384f3aaa54414bc657ad00, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  useRemainingForceForMovement: 0
-  useRigidbody: 0
+  enableMixer: 0
+  verbose: 0
+  isKinematic: 0
+  nearDistance: 0.03
+  uprightThresholdDistance: {x: 0.2, y: 1, z: 0.3}
+  centroid: {fileID: 0}
+  ground: {fileID: 0}
+  postureControl: 1
 --- !u!1 &1267930829
 GameObject:
   m_ObjectHideFlags: 0
@@ -11336,7 +11340,7 @@ PrefabInstance:
         type: 3}
       propertyPath: onFocus.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 1263210359}
+      objectReference: {fileID: 0}
     - target: {fileID: 7058272015344992995, guid: 6d23ff9771f224988a128295d935b05e,
         type: 3}
       propertyPath: onFocus.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
@@ -11998,7 +12002,7 @@ PrefabInstance:
         type: 3}
       propertyPath: onFocus.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 1263210359}
+      objectReference: {fileID: 0}
     - target: {fileID: 7058272015344992995, guid: 6d23ff9771f224988a128295d935b05e,
         type: 3}
       propertyPath: onFocus.m_PersistentCalls.m_Calls.Array.data[0].m_CallState

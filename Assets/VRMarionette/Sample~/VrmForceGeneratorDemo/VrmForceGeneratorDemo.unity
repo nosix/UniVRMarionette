@@ -140,7 +140,7 @@ GameObject:
   - component: {fileID: 53802166}
   - component: {fileID: 53802167}
   m_Layer: 0
-  m_Name: Sphere
+  m_Name: ForceSource
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -279,6 +279,9 @@ MonoBehaviour:
   hold: 0
   onEnter: 1
   focusColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 0.49803922}
+  onFocus:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!114 &53802167
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -793,15 +796,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb59156c19ef40c59767318161daa87e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  vrmFileName: model.vrm
   springBoneColliderGroups:
   - {fileID: 53802160}
   forceSources:
   - {fileID: 53802166}
   humanLimits: {fileID: 11400000, guid: f1ad93ed4205647ac91f95ca97a67c08, type: 2}
   forceFields: {fileID: 11400000, guid: bc3aad8d5468f4af2b0c8a39cb7221c3, type: 2}
-  enableMixer: 1
-  verbose: 0
+  bodyWeights: {fileID: 0}
+  vrmFileName: model.vrm
+  onLoaded:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1736832899}
+        m_TargetAssemblyTypeName: VRMarionette.VrmMarionetteConfig, VRMarionette
+        m_MethodName: Setup
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!4 &1088003179
 Transform:
   m_ObjectHideFlags: 0
@@ -1135,6 +1152,59 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1736832898
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1736832900}
+  - component: {fileID: 1736832899}
+  m_Layer: 0
+  m_Name: Config
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1736832899
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1736832898}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 114e82cc7a384f3aaa54414bc657ad00, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enableMixer: 1
+  useRemainingForceForMovement: 0
+  verbose: 0
+  isKinematic: 0
+  nearDistance: 0.03
+  uprightThresholdDistance: {x: 0.2, y: 1, z: 0.3}
+  centroid: {fileID: 0}
+  ground: {fileID: 0}
+  postureControl: 0
+--- !u!4 &1736832900
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1736832898}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -1142,6 +1212,7 @@ SceneRoots:
   - {fileID: 992930300}
   - {fileID: 1329974092}
   - {fileID: 205165264}
+  - {fileID: 1736832900}
   - {fileID: 53802163}
   - {fileID: 1169484948}
   - {fileID: 1718453524}

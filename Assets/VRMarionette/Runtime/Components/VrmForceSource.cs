@@ -12,7 +12,12 @@ namespace VRMarionette
     public class VrmForceSource : MonoBehaviour
     {
         public bool hold;
+
+        [Tooltip("The force not used for joint rotation is applied to movement.")]
+        public bool useRemainingForceForMovement;
+
         public bool onEnter;
+
         public Color focusColor = Color.yellow;
 
         [Space]
@@ -53,7 +58,11 @@ namespace VRMarionette
 
             if (!hold && !_holdOff && onEnter)
             {
-                _forceGenerator.QueueForceToPush(_collider, other);
+                _forceGenerator.QueueForceToPush(
+                    other.transform,
+                    _collider,
+                    useRemainingForceForMovement
+                );
             }
         }
 
@@ -77,7 +86,11 @@ namespace VRMarionette
                     _prevRotation = t.rotation;
                     return;
                 case false when !_holdOff && !onEnter:
-                    _forceGenerator.QueueForceToPush(_collider, other);
+                    _forceGenerator.QueueForceToPush(
+                        other.transform,
+                        _collider,
+                        useRemainingForceForMovement
+                    );
                     break;
             }
         }
@@ -161,7 +174,14 @@ namespace VRMarionette
             var currRotation = t.rotation;
             var force = currPosition - _prevPosition;
             var rotation = currRotation * Quaternion.Inverse(_prevRotation);
-            _forceGenerator.QueueForce(_collider, _holdCollider, force, rotation);
+            _forceGenerator.QueueForce(
+                _holdCollider.transform,
+                _collider.transform.position,
+                force,
+                rotation,
+                allowMultiSource: true,
+                useRemainingForceForMovement
+            );
             _prevPosition = currPosition;
             _prevRotation = currRotation;
         }

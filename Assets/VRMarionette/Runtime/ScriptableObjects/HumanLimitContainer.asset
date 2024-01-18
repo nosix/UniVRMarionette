@@ -17,26 +17,26 @@ MonoBehaviour:
     min: {x: -180, y: -180, z: -180}
     max: {x: 180, y: 180, z: 180}
   - bone: 7
-    min: {x: -30, y: -30, z: -20}
-    max: {x: 60, y: 30, z: 20}
+    min: {x: -45, y: -40, z: -30}
+    max: {x: 60, y: 40, z: 30}
   - bone: 8
-    min: {x: -30, y: -30, z: -20}
-    max: {x: 60, y: 30, z: 20}
+    min: {x: -45, y: -40, z: -30}
+    max: {x: 60, y: 40, z: 30}
   - bone: 54
-    min: {x: -30, y: -30, z: -20}
-    max: {x: 60, y: 30, z: 20}
+    min: {x: -10, y: -10, z: -10}
+    max: {x: 10, y: 10, z: 10}
   - bone: 9
     min: {x: -30, y: -30, z: -20}
-    max: {x: 30, y: 30, z: 20}
+    max: {x: 15, y: 30, z: 20}
   - bone: 10
     min: {x: -30, y: -30, z: -20}
-    max: {x: 30, y: 30, z: 20}
+    max: {x: 15, y: 30, z: 20}
   - bone: 11
-    min: {x: -45, y: -10, z: -10}
-    max: {x: 20, y: 10, z: 30}
+    min: {x: 0, y: -10, z: -10}
+    max: {x: 0, y: 10, z: 30}
   - bone: 13
-    min: {x: -45, y: -10, z: -70}
-    max: {x: 20, y: 80, z: 30}
+    min: {x: -90, y: -10, z: -70}
+    max: {x: 40, y: 80, z: 30}
   - bone: 15
     min: {x: 0, y: 0, z: 0}
     max: {x: 0, y: 135, z: 0}
@@ -89,11 +89,11 @@ MonoBehaviour:
     min: {x: 0, y: 0, z: 0}
     max: {x: 0, y: 0, z: 75}
   - bone: 12
-    min: {x: -45, y: -10, z: -30}
-    max: {x: 20, y: 10, z: 10}
+    min: {x: 0, y: -10, z: -30}
+    max: {x: 0, y: 10, z: 10}
   - bone: 14
-    min: {x: -45, y: -80, z: -30}
-    max: {x: 20, y: 10, z: 70}
+    min: {x: -90, y: -80, z: -30}
+    max: {x: 40, y: 10, z: 70}
   - bone: 16
     min: {x: 0, y: -135, z: 0}
     max: {x: 0, y: 0, z: 0}

@@ -25,6 +25,18 @@ namespace VRMarionette
             _properties = properties;
         }
 
+        public Vector3 ToBottomPosition(Vector3 position)
+        {
+            position.y -= Collider.radius;
+            return position;
+        }
+
+        public Vector3 ToPosition(Vector3 bottomPosition)
+        {
+            bottomPosition.y += Collider.radius;
+            return bottomPosition;
+        }
+
         /// <summary>
         /// 骨が連結して回転する場合の根元の骨の関節を探す。
         /// 根元の骨の関節が OriginTransform になり、
@@ -51,12 +63,12 @@ namespace VRMarionette
         /// <returns>対象の骨と指定した骨が連結しているなら true を返す</returns>
         public bool IsLinked(HumanBodyBones bone)
         {
+            // TODO BoneGroups の情報で代用できないか？
             switch (Bone)
             {
                 case HumanBodyBones.Spine:
                 case HumanBodyBones.Chest:
-                case HumanBodyBones.UpperChest:
-                    return bone is HumanBodyBones.Spine or HumanBodyBones.Chest or HumanBodyBones.UpperChest;
+                    return bone is HumanBodyBones.Spine or HumanBodyBones.Chest;
                 case HumanBodyBones.Neck:
                 case HumanBodyBones.Head:
                     return bone is HumanBodyBones.Neck or HumanBodyBones.Head;

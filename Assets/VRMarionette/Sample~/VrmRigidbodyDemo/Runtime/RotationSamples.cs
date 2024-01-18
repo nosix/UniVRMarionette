@@ -12,7 +12,8 @@ namespace VRMarionette_Sample.VrmRigidbodyDemo.Runtime
 
         public void SetInstance(Vrm10Instance instance)
         {
-            mixer = instance.GetComponent<VrmControlRigMixer>();
+            mixer = instance.GetComponent<VrmControlRigMixer>()
+                    ?? throw new InvalidOperationException("VrmControlRigMixer is needed.");
         }
 
         public void Reset()

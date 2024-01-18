@@ -13,9 +13,6 @@ namespace VRMarionette
         [Space]
         public UnityEvent<Vrm10Instance> onLoaded;
 
-        [Space]
-        public bool enableMixer;
-
         private void Start()
         {
             LoadVrmAsync();
@@ -27,11 +24,6 @@ namespace VRMarionette
             var instance = await Vrm10.LoadBytesAsync(bytes);
 
             Build(instance);
-
-            if (enableMixer)
-            {
-                instance.gameObject.AddComponent<VrmControlRigMixer>();
-            }
 
             // 名前、位置、回転、スケールを引き継いで GameObject を置き換える
             // 諸々の構築後に Transform を設定しないと Transform の影響を受けた座標系になるので注意
