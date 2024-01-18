@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UniVRM10;
@@ -15,13 +14,10 @@ namespace VRMarionette
     /// </summary>
     public class VrmControlRigManipulator : MonoBehaviour
     {
-        public bool withEulerAnglesCache = true;
+        public HumanLimits HumanLimits { private set; get; }
 
         private Animator _animator;
-        private HumanLimits _humanLimits;
         private BoneGroups _boneGroups;
-        private EulerAngleAccessor _eulerAngleAccessor;
-        private EulerAngleAccessorWithCache _eulerAngleAccessorWithCache;
 
         public void Initialize(Vrm10Instance instance, HumanLimitContainer humanLimits)
         {
@@ -31,9 +27,8 @@ namespace VRMarionette
                 throw new InvalidOperationException("The VrmInstance has not Animator component.");
             }
 
-            _humanLimits = new HumanLimits(humanLimits);
-            _boneGroups = new BoneGroups(_humanLimits);
-            _eulerAngleAccessor = new EulerAngleAccessor(_animator, _humanLimits);
+            HumanLimits = new HumanLimits(humanLimits);
+            _boneGroups = new BoneGroups(HumanLimits);
         }
 
         /// <summary>
@@ -265,7 +260,13 @@ namespace VRMarionette
         /// <returns>回転した角度</returns>
         private Vector3 SetLocalEulerAngle(HumanBodyBones bone, Vector3 angle)
         {
-            return GetEulerAngleAccessor().SetLocalEulerAngle(bone, angle);
+            var boneTransform = _animator.GetBoneTransform(bone);
+            if (boneTransform is null) return Vector3.zero;
+            var clampedAngle = HumanLimits.ClampAngle(bone, angle);
+            var rotation = HumanLimits.ToRotation(bone, clampedAngle);
+            var localRotation = GetLocalEulerAngle(bone);
+            boneTransform.localRotation = rotation;
+            return GetLocalEulerAngle(bone) - localRotation;
         }
 
         private Vector3 GetBoneGroupRotation(BoneGroups.Id group)
@@ -278,7 +279,10 @@ namespace VRMarionette
 
         private Vector3 GetLocalEulerAngle(HumanBodyBones bone)
         {
-            return GetEulerAngleAccessor().GetLocalEulerAngle(bone);
+            var boneTransform = _animator.GetBoneTransform(bone);
+            if (boneTransform is null) return Vector3.zero;
+            var angle = HumanLimits.ToEulerAngles(bone, boneTransform.localRotation);
+            return angle;
         }
 
         private static Vector3 NormalizeAngles(Vector3 angles)
@@ -307,127 +311,6 @@ namespace VRMarionette
             Independent,
             Grouped,
             NotSupported
-        }
-
-        private IEulerAngleAccessor GetEulerAngleAccessor()
-        {
-            _eulerAngleAccessorWithCache = withEulerAnglesCache switch
-            {
-                true when _eulerAngleAccessorWithCache is null =>
-                    new EulerAngleAccessorWithCache(_animator, _humanLimits, _eulerAngleAccessor),
-                false when _eulerAngleAccessorWithCache is not null =>
-                    null,
-                _ => _eulerAngleAccessorWithCache
-            };
-
-            return withEulerAnglesCache ? _eulerAngleAccessorWithCache : _eulerAngleAccessor;
-        }
-
-        private interface IEulerAngleAccessor
-        {
-            public Vector3 SetLocalEulerAngle(HumanBodyBones bone, Vector3 angle);
-            public Vector3 GetLocalEulerAngle(HumanBodyBones bone);
-        }
-
-        /// <summary>
-        /// HumanLimits の制限範囲が広い Bone で不正確な値になることはあるが
-        /// Bone の rotation をそのまま使用するので
-        /// VrmControlRigManipulator を通さずに rotation を変更した場合でも
-        /// ある程度は動作する
-        /// (Hips, UpperLeg, Hand で不正確な値になる)
-        /// </summary>
-        private class EulerAngleAccessor : IEulerAngleAccessor
-        {
-            private readonly Animator _animator;
-            private readonly HumanLimits _humanLimits;
-
-            public EulerAngleAccessor(Animator animator, HumanLimits humanLimits)
-            {
-                _animator = animator;
-                _humanLimits = humanLimits;
-            }
-
-            public Vector3 SetLocalEulerAngle(HumanBodyBones bone, Vector3 angle)
-            {
-                var boneTransform = _animator.GetBoneTransform(bone);
-                if (!boneTransform) return Vector3.zero;
-                var nextAngle = _humanLimits.ClampAngle(bone, angle);
-                var rotatedAngle = nextAngle - GetLocalEulerAngle(bone);
-                boneTransform.localEulerAngles = nextAngle;
-                return rotatedAngle;
-            }
-
-            public Vector3 GetLocalEulerAngle(HumanBodyBones bone)
-            {
-                var boneTransform = _animator.GetBoneTransform(bone);
-                if (!boneTransform) return Vector3.zero;
-                // 一つのクォータニオンに対して複数のオイラー角があり得るので候補の中から最適なオイラー角を選ぶ
-                // 正規化した角度を制限範囲内に補正した上で差分が最も小さかったオイラー角を最適と判断する
-                var candidate1 = boneTransform.localEulerAngles;
-                var candidate2 = new Vector3(180f - candidate1.x, candidate1.y + 180f, candidate1.z + 180f);
-                var normalized1 = NormalizeAngles(candidate1);
-                var normalized2 = NormalizeAngles(candidate2);
-                var clamped1 = _humanLimits.ClampAngle(bone, normalized1);
-                var clamped2 = _humanLimits.ClampAngle(bone, normalized2);
-                return (normalized1 - clamped1).magnitude > (normalized2 - clamped2).magnitude
-                    ? normalized2
-                    : normalized1;
-            }
-        }
-
-        /// <summary>
-        /// Bone の localEulerAngles を別途キャッシュすることで正確さを維持する
-        /// 但し、VrmControlRigManipulator を通さずに rotation を変更すると
-        /// キャッシュを破棄して不正確な値になることがある
-        /// </summary>
-        private class EulerAngleAccessorWithCache : IEulerAngleAccessor
-        {
-            private readonly Animator _animator;
-            private readonly HumanLimits _humanLimits;
-            private readonly EulerAngleAccessor _accessor;
-
-            private readonly IDictionary<HumanBodyBones, Vector3> _localEulerAngles
-                = new Dictionary<HumanBodyBones, Vector3>();
-
-            public EulerAngleAccessorWithCache(Animator animator, HumanLimits humanLimits, EulerAngleAccessor accessor)
-            {
-                _animator = animator;
-                _humanLimits = humanLimits;
-                _accessor = accessor;
-            }
-
-            public Vector3 SetLocalEulerAngle(HumanBodyBones bone, Vector3 angle)
-            {
-                var boneTransform = _animator.GetBoneTransform(bone);
-                if (!boneTransform) return Vector3.zero;
-                var nextAngle = _humanLimits.ClampAngle(bone, angle);
-                var rotatedAngle = nextAngle - GetLocalEulerAngle(bone);
-                _localEulerAngles[bone] = nextAngle;
-                boneTransform.localEulerAngles = nextAngle;
-                return rotatedAngle;
-            }
-
-            public Vector3 GetLocalEulerAngle(HumanBodyBones bone)
-            {
-                var boneTransform = _animator.GetBoneTransform(bone);
-                if (!boneTransform) return Vector3.zero;
-
-                // キャッシュがない場合はキャッシュなしアクセサを使う
-                if (!_localEulerAngles.TryGetValue(bone, out var angle))
-                {
-                    return _accessor.GetLocalEulerAngle(bone);
-                }
-
-                // Bone の rotation とキャッシュが異なる場合はキャッシュを無効にしてキャッシュなしアクセサを使う
-                if (Quaternion.Angle(boneTransform.localRotation, Quaternion.Euler(angle)) > Mathf.Epsilon)
-                {
-                    _localEulerAngles.Remove(bone);
-                    return _accessor.GetLocalEulerAngle(bone);
-                }
-
-                // キャッシュ済みの角度は ClampAngle 済みなのでそのまま返す
-                return angle;
-            }
         }
     }
 }

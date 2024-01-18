@@ -6,6 +6,7 @@ namespace VRMarionette
     {
         public Transform Transform { get; }
         public HumanBodyBones Bone { get; }
+        public HumanLimit Limit { get; }
         public CapsuleCollider Collider { get; }
 
         public bool HasCollider => Collider is not null;
@@ -15,12 +16,14 @@ namespace VRMarionette
         public BoneProperty(
             Transform transform,
             HumanBodyBones bone,
+            HumanLimit limit,
             CapsuleCollider collider,
             BoneProperties properties
         )
         {
             Transform = transform;
             Bone = bone;
+            Limit = limit;
             Collider = collider;
             _properties = properties;
         }
@@ -42,10 +45,12 @@ namespace VRMarionette
         /// 根元の骨の関節が OriginTransform になり、
         /// 関節の位置を原点としたときの力の発生源の位置を SourceLocalPosition として保持する。
         /// </summary>
-        /// <param name="originTransform">連結した骨の末端側の関節を受け取り、根元の関節を返す</param>
+        /// <param name="targetTransform">連結した骨の末端側の関節</param>
         /// <param name="sourceLocalPosition">力の発生源の位置(末端側の関節基準の位置を受け取り、根元の関節基準の位置を返す)</param>
-        public void FindOrigin(ref Transform originTransform, ref Vector3 sourceLocalPosition)
+        /// <returns>根元の関節</returns>
+        public Transform FindOrigin(Transform targetTransform, ref Vector3 sourceLocalPosition)
         {
+            var originTransform = targetTransform;
             while (true)
             {
                 var originProperty = _properties.Get(originTransform);
@@ -54,6 +59,8 @@ namespace VRMarionette
                 sourceLocalPosition += parentTransform.InverseTransformPoint(originTransform.position);
                 originTransform = parentTransform;
             }
+
+            return originTransform;
         }
 
         /// <summary>
@@ -81,6 +88,31 @@ namespace VRMarionette
                 default:
                     return false;
             }
+        }
+
+        /// <summary>
+        /// BoneProperty.FindOrigin で得た sourceLocalPosition の位置をワールド座標に変換する。
+        /// sourceLocalPosition の位置は骨が連結している場合に骨を一直線に伸ばした時の相対位置になっている。
+        /// </summary>
+        /// <param name="targetTransform">連結した骨の末端側の関節</param>
+        /// <param name="originTransform">連結した骨の根元の関節</param>
+        /// <param name="sourceLocalPosition">力の発生源の位置(根元の関節基準の位置)</param>
+        /// <returns>力の発生源の位置(ワールド座標)</returns>
+        public static Vector3 ToWorldPosition(
+            Transform targetTransform,
+            Transform originTransform,
+            Vector3 sourceLocalPosition
+        )
+        {
+            var t = targetTransform;
+            while (t != originTransform)
+            {
+                var parentTransform = t.parent;
+                sourceLocalPosition -= parentTransform.InverseTransformPoint(t.position);
+                t = parentTransform;
+            }
+
+            return targetTransform.TransformPoint(sourceLocalPosition);
         }
     }
 }

@@ -9,7 +9,10 @@ namespace VRMarionette
         [Header("ControlRigMixer")] [Space]
         public bool enableMixer;
 
+        [Header("ForceGenerator")] [Space]
         public bool verbose;
+
+        public bool filterZero = true;
 
         [Header("Rigidbody")] [Space]
         public bool isKinematic;
@@ -51,6 +54,7 @@ namespace VRMarionette
             var forceGenerator = instance.GetComponent<VrmForceGenerator>();
             if (forceGenerator is null) return;
             forceGenerator.verbose = verbose;
+            forceGenerator.filterZero = filterZero;
         }
 
         private void SetupRigidbody(GameObject instance)

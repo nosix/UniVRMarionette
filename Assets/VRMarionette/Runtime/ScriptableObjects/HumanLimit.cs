@@ -6,6 +6,7 @@ namespace VRMarionette
     public class HumanLimit
     {
         public HumanBodyBones bone;
+        public Direction axis;
         public Vector3 min;
         public Vector3 max;
     }

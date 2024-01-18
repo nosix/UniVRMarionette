@@ -139,6 +139,7 @@ GameObject:
   - component: {fileID: 53802165}
   - component: {fileID: 53802166}
   - component: {fileID: 53802167}
+  - component: {fileID: 53802168}
   m_Layer: 0
   m_Name: ForceSource
   m_TagString: Untagged
@@ -277,7 +278,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   hold: 0
+  useRemainingForceForMovement: 0
   onEnter: 1
+  trace: 0
   focusColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 0.49803922}
   onFocus:
     m_PersistentCalls:
@@ -295,6 +298,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   capsule: {fileID: 1169484949}
+--- !u!114 &53802168
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 53802158}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02691cc73bc6442fb1e978ac1acebbc1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  logFilePath: com.github.nosix.vrm.marionette-logcat.txt
+  targetObjectName: Palm
+  pause: 0
 --- !u!1 &99344431
 GameObject:
   m_ObjectHideFlags: 0
@@ -324,23 +342,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0ec9727d555e4c0eb8083e302a79fc52, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  mixer: {fileID: 0}
   editTarget: {fileID: 53802163}
   samples:
   - position: {x: 0.08, y: 0.15, z: -0.09}
     rotation: {x: 0, y: 0, z: 0}
   - position: {x: -0.08, y: 0.15, z: -0.09}
     rotation: {x: 0, y: 0, z: 0}
-  - position: {x: 0.08, y: 0.15, z: 0.04}
+  - position: {x: 0.08, y: 0.15, z: 0.03}
     rotation: {x: 0, y: 180, z: 0}
-  - position: {x: -0.08, y: 0.15, z: 0.04}
+  - position: {x: -0.08, y: 0.15, z: 0.03}
     rotation: {x: 0, y: 180, z: 0}
   - position: {x: 0.03, y: 0.15, z: 0}
     rotation: {x: 0, y: 90, z: 0}
   - position: {x: -0.03, y: 0.15, z: 0}
     rotation: {x: 0, y: -90, z: 0}
-  - position: {x: 0.17, y: 0.15, z: 0}
+  - position: {x: 0.15, y: 0.15, z: 0}
     rotation: {x: 0, y: -90, z: 0}
-  - position: {x: -0.17, y: 0.15, z: 0}
+  - position: {x: -0.15, y: 0.15, z: 0}
     rotation: {x: 0, y: 90, z: 0}
 --- !u!4 &99344433
 Transform:
@@ -597,6 +616,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0ec9727d555e4c0eb8083e302a79fc52, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  mixer: {fileID: 0}
   editTarget: {fileID: 53802163}
   samples:
   - position: {x: 0.08, y: 0.65, z: -0.07}
@@ -717,7 +737,7 @@ Transform:
   m_GameObject: {fileID: 992930297}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -1}
+  m_LocalPosition: {x: 0, y: 1, z: -2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -811,6 +831,31 @@ MonoBehaviour:
         m_TargetAssemblyTypeName: VRMarionette.VrmMarionetteConfig, VRMarionette
         m_MethodName: Setup
         m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 1736832901}
+        m_TargetAssemblyTypeName: VRMarionette_Sample.VrmForceGeneratorDemo.Runtime.TransformSamplesInitializer,
+          VrmForceGeneratorDemo
+        m_MethodName: Initialize
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 53802168}
+        m_TargetAssemblyTypeName: VRMarionette.VrmForceSourceController, VRMarionette
+        m_MethodName: OnModelReady
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -943,6 +988,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0ec9727d555e4c0eb8083e302a79fc52, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  mixer: {fileID: 0}
   editTarget: {fileID: 53802163}
   samples:
   - position: {x: 0, y: 1.6, z: -0.05}
@@ -1119,15 +1165,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0ec9727d555e4c0eb8083e302a79fc52, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  mixer: {fileID: 0}
   editTarget: {fileID: 53802163}
   samples:
   - position: {x: 0.3, y: 1.33, z: -0.08}
     rotation: {x: 0, y: 0, z: 0}
   - position: {x: -0.3, y: 1.33, z: -0.08}
     rotation: {x: 0, y: 0, z: 0}
-  - position: {x: 0.3, y: 1.33, z: 0.07}
+  - position: {x: 0.3, y: 1.33, z: 0.03}
     rotation: {x: 180, y: 0, z: 0}
-  - position: {x: -0.3, y: 1.33, z: 0.07}
+  - position: {x: -0.3, y: 1.33, z: 0.03}
     rotation: {x: 180, y: 0, z: 0}
   - position: {x: 0.3, y: 1.28, z: -0.01}
     rotation: {x: -90, y: 0, z: 0}
@@ -1162,6 +1209,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1736832900}
   - component: {fileID: 1736832899}
+  - component: {fileID: 1736832901}
   m_Layer: 0
   m_Name: Config
   m_TagString: Untagged
@@ -1182,8 +1230,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enableMixer: 1
-  useRemainingForceForMovement: 0
-  verbose: 0
+  verbose: 1
+  filterZero: 1
   isKinematic: 0
   nearDistance: 0.03
   uprightThresholdDistance: {x: 0.2, y: 1, z: 0.3}
@@ -1205,6 +1253,23 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1736832901
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1736832898}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a62de0e3ac474f5f898b8a1cf6b49bb6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  samples:
+  - {fileID: 1718453523}
+  - {fileID: 824366342}
+  - {fileID: 99344432}
+  - {fileID: 1285917707}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

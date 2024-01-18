@@ -57,6 +57,7 @@ namespace VRMarionette
 
             CreateColliderForEachBones(
                 animator,
+                _controlRigManipulator.HumanLimits,
                 forceFields.forceFields.ToDictionary(e => e.bone, e => e),
                 bonePropertiesBuilder
             );
@@ -66,6 +67,7 @@ namespace VRMarionette
 
         private static void CreateColliderForEachBones(
             Animator animator,
+            HumanLimits humanLimits,
             IReadOnlyDictionary<HumanBodyBones, ForceField> forceFields,
             BoneProperties.Builder bonePropertiesBuilder
         )
@@ -74,13 +76,16 @@ namespace VRMarionette
             {
                 var boneTransform = animator.GetBoneTransform(bone);
                 if (boneTransform is null) continue;
-                if (forceFields.TryGetValue(bone, out var forceField))
+
+                if (humanLimits.TryGetValue(bone, out var humanLimit) &&
+                    forceFields.TryGetValue(bone, out var forceField))
                 {
                     if (bone == HumanBodyBones.Head)
                     {
                         bonePropertiesBuilder.Add(
                             bone,
                             boneTransform,
+                            humanLimit,
                             CreateHeadCapsule(forceField, boneTransform)
                         );
                     }
@@ -92,6 +97,7 @@ namespace VRMarionette
                                 bonePropertiesBuilder.Add(
                                     bone,
                                     boneTransform,
+                                    humanLimit,
                                     CreateCapsuleForSingleChildBone(
                                         forceField,
                                         headBoneTransform: boneTransform,
@@ -103,6 +109,7 @@ namespace VRMarionette
                                 bonePropertiesBuilder.Add(
                                     bone,
                                     boneTransform,
+                                    humanLimit,
                                     CreateCapsuleForMultiChildrenBone(
                                         forceField,
                                         headBoneTransform: boneTransform,
@@ -115,7 +122,12 @@ namespace VRMarionette
                 }
                 else
                 {
-                    bonePropertiesBuilder.Add(bone, boneTransform, null);
+                    bonePropertiesBuilder.Add(
+                        bone,
+                        boneTransform,
+                        humanLimits.TryGetValue(bone, out humanLimit) ? humanLimit : null,
+                        null
+                    );
                 }
             }
         }
@@ -216,16 +228,23 @@ namespace VRMarionette
         /// 押す力を積む (Updateで積まれた力が処理される)
         /// </summary>
         /// <param name="target">力を働かせる対象の身体部位</param>
-        /// <param name="source">力の発生源</param>
+        /// <param name="forcePoint">力が発生する位置</param>
+        /// <param name="force">力の大きさ(移動量)</param>
         /// <param name="allowBodyMovement">回転で消費されなかった力を移動に使うなら true</param>
-        public void QueueForceToPush(Transform target, SphereCollider source, bool allowBodyMovement)
+        public void QueueForce(
+            Transform target,
+            Vector3 forcePoint,
+            Vector3 force,
+            bool allowBodyMovement
+        )
         {
             if (!BoneProperties.TryGetValue(target, out var boneProperty)) return;
-            var context = new Context(source.transform.position, boneProperty, _rootTransform);
-            var force = CalculateForceToPush(context, source, boneProperty.Collider);
+            var context = new Context(forcePoint, boneProperty, _rootTransform);
             _forceGenerationQueue.Enqueue(new ForceGenerationTask(
                 context,
                 force,
+                rotation: null,
+                allowMultiSource: false,
                 allowBodyMovement
             ));
         }
@@ -302,10 +321,36 @@ namespace VRMarionette
                 Debug.Log($"ExecuteTask: {context.Bone}\n" + task.ToLogString());
             }
 
-            if (task.HasAxisRotation)
+            var force = task.Force;
+
+            if (task.IsMultiSource)
             {
-                ApplyAxisRotationToBone(context, task.AxisRotationAngle);
-                // 回転と移動を同時に行うと思った通りの操作ができないため回転するときは移動しない
+                if (context.Bone == HumanBodyBones.Spine)
+                {
+                    context = new Context(context, BoneProperties.Get(_rootTransform));
+                }
+
+                if (context.Bone == HumanBodyBones.Hips && task.Rotation.HasValue)
+                {
+                    ApplyRotationToBone(context, task.Rotation.Value);
+                }
+
+                if (task.HasAxisRotation)
+                {
+                    ApplyAxisRotationToBone(context, task.AxisRotationAngle, context.TargetAxisDirection);
+                }
+
+                if (context.Bone == HumanBodyBones.Hips)
+                {
+                    _instanceTransform.position += force;
+                }
+
+                return;
+            }
+
+            if (context.Bone == HumanBodyBones.Hips)
+            {
+                ApplyForceToHipsBone(context, force);
                 return;
             }
 
@@ -317,29 +362,12 @@ namespace VRMarionette
                 }
                 else if (context.CanAxisRotate())
                 {
-                    ApplyAxisRotationToBone(context, task.Rotation.Value);
+                    ApplyAxisRotationToBone(context, task.Rotation.Value, context.TargetAxisDirection);
                 }
             }
 
-            var force = task.Force;
             while (context != null && !Mathf.Approximately(force.magnitude, 0f))
             {
-                if (context.Bone == HumanBodyBones.Hips)
-                {
-                    // 両手操作では全体の移動、片手操作では Hips だけの移動にする
-                    if (task.IsMultiSource)
-                    {
-                        _instanceTransform.position += force;
-                        force = Vector3.zero;
-                    }
-                    else
-                    {
-                        force = ApplyForceToHipsBone(context, force);
-                    }
-
-                    break;
-                }
-
                 if (context.Bone is
                     HumanBodyBones.LeftLowerArm or
                     HumanBodyBones.RightLowerArm or
@@ -361,53 +389,7 @@ namespace VRMarionette
             if (task.AllowBodyMovement) _instanceTransform.position += force;
         }
 
-        /// <summary>
-        /// 処理対象の状況(衝突の状況)から発生する力を求める。
-        /// 力の量は物体が身体に食い込む距離で表現しており、身体部位の移動量になる。
-        /// </summary>
-        /// <param name="context">処理対象の状況</param>
-        /// <param name="sourceCollider">力の発生元</param>
-        /// <param name="targetCollider">力を作用させる対象</param>
-        /// <returns>力を表すベクトル(大きさは移動量、座標系はワールド)</returns>
-        private Vector3 CalculateForceToPush(
-            Context context,
-            SphereCollider sourceCollider,
-            CapsuleCollider targetCollider
-        )
-        {
-            // 『力の源の位置』のうち『力が作用する対象の軸』と直交する成分を求める
-            var sourceFromAxis = context.SourceLocalPosition.OrthogonalComponent(context.TargetAxisDirection);
-
-            // 『力の源の位置』と『力が作用する対象の軸』との距離を求める
-            var sourceDistance = sourceFromAxis.magnitude;
-
-            // 『軸までの距離』と『Collider の半径』の差を皮膚までの距離として扱う
-            var skinDistance = sourceDistance - ToRadius(targetCollider) - ToRadius(sourceCollider);
-
-            // 力の方向が軸を向いていることを検証する
-            var forceDirection = context.GetSourceAxisDirection(sourceCollider.transform);
-            var isAimedAtAxis = Vector3.Dot(sourceFromAxis, forceDirection) < -Mathf.Epsilon;
-
-            // 力が軸に向かっていて皮膚に食い込むのであれば、食い込む量に応じて力を発生させる
-            // 力の大きさは移動量で表現する
-            var forceStrength = isAimedAtAxis && skinDistance < -Mathf.Epsilon ? -skinDistance : 0f;
-            var force = forceStrength * forceDirection;
-
-            if (verbose)
-            {
-                Debug.Log("CalculateForceToPush\n" +
-                          $"force: {force}\n" +
-                          $"forceDirection: {forceDirection}\n" +
-                          $"forceStrength: {forceStrength}\n" +
-                          $"skinDistance: {skinDistance}\n" +
-                          $"sourceDistance: {sourceDistance}\n"
-                );
-            }
-
-            return context.ToWorldDirection(force);
-        }
-
-        private Vector3 ApplyForceToHipsBone(Context context, Vector3 force)
+        private void ApplyForceToHipsBone(Context context, Vector3 force)
         {
             var sourcePosition = context.TargetTransform.TransformPoint(context.SourceLocalPosition);
             var targetPosition = context.TargetTransform.position;
@@ -418,14 +400,11 @@ namespace VRMarionette
                 var childPosition = childTransform.position;
                 var ratio = (sourcePosition - childPosition).magnitude / (targetPosition - childPosition).magnitude;
                 var forceSourcePosition = Vector3.Lerp(childPosition, childTransform.GetChild(0).position, ratio);
-                // BUG 軸に近い場所に力が働くので、大きく捻りが加わる場合がある
                 var childContext = new Context(forceSourcePosition, boneProperty, _rootTransform);
                 ApplyForceToBone(childContext, -force);
             }
 
             _instanceTransform.position += force;
-
-            return Vector3.zero;
         }
 
         /// <summary>
@@ -593,61 +572,98 @@ namespace VRMarionette
         /// <returns>処理しきれなかった力を表すベクトル(大きさは移動量、座標系はワールド)</returns>
         private Vector3 ApplyForceToBone(Context context, Vector3 force)
         {
-            var expectedLocalMove = context.ToLocalDirection(force);
+            var axis = context.TargetAxisDirection.ToAxis();
+
+            // 骨の軸回りの回転の影響を受けない様にする
+            var localRotation =
+                context.TargetTransform.localRotation.ToEulerAnglesWithAxis(context.TargetAxisDirection);
+            localRotation -= Vector3.Scale(localRotation, axis);
+            var rotation =
+                localRotation.ToRotationWithAxis(context.TargetAxisDirection)
+                * context.TargetTransform.parent.rotation;
+            var expectedLocalMove = Quaternion.Inverse(rotation) * force;
 
             // 骨の軸と同一方向の力で回転すると動きが不自然になるので行わない
-            var localMove = expectedLocalMove - Vector3.Scale(expectedLocalMove, context.TargetAxisDirection);
+            var localMove = expectedLocalMove - Vector3.Scale(expectedLocalMove, axis);
 
-            // 回転軸は『原点から力点へのベクトル(P)』と『力のベクトル(F)』に直交する
-            var rotationAxis = Vector3.Cross(
-                context.SourceLocalPosition.normalized,
-                localMove.normalized
-            );
+            if (Mathf.Approximately(localMove.magnitude, 0f)) return force;
 
-            // 回転角度(theta)を求める
-            // P が F に直交していれば F は回転に最大限寄与する
-            // P が F に平行していれば F は回転に寄与しない
-            // P と F の間の角度を alpha とすると sin(0) = 0, sin(pi/2) = 1
-            // theta = |F|sin(alpha) / r で求められる
-            // r は回転の中心と点 P の間の距離
-            // |P x F| = |P||F|sin(alpha) であり、P と F は正規化しているので
-            // sin(alpha) = |P x F|
-            var sinAlpha = rotationAxis.magnitude;
-            var theta = Mathf.Rad2Deg * localMove.magnitude * sinAlpha / context.SourceLocalPosition.magnitude;
+            // 各軸回りの回転を求める
+            var radius = BoneProperties.TryGetValue(context.TargetTransform, out var boneProperty)
+                ? boneProperty.Collider.radius
+                : 0f;
 
-            // 回転する
-            var rotation = Quaternion.AngleAxis(theta, rotationAxis);
-            var actualRotationAngle = _controlRigManipulator.Rotate(context.Bone, rotation.eulerAngles);
+            var v1 = context.SourceLocalPosition;
+            var v2 = v1 + localMove;
 
-            // 実際の回転から移動量を逆算する
-            var actualRotation = Quaternion.Euler(actualRotationAngle);
-            var rotatedSourceLocalPosition = actualRotation * context.SourceLocalPosition;
-            var actualLocalMove = rotatedSourceLocalPosition - context.SourceLocalPosition;
+            bool doAxisRotation;
+            var tiltAngle = Vector3.zero;
+            var rotationAngle = Vector3.zero;
+            switch (context.TargetAxisDirection)
+            {
+                case Direction.XAxis:
+                    // TODO x,y,z が 0 の場合を考慮する
+                    tiltAngle.y = v2.AngleYForXAxis() - v1.AngleYForXAxis();
+                    tiltAngle.z = v2.AngleZForXAxis() - v1.AngleZForXAxis();
+                    doAxisRotation = v1.MagnitudeForXAxis() > radius && v2.MagnitudeForXAxis() > radius;
+                    if (doAxisRotation) rotationAngle.x = v2.AngleXForXAxis() - v1.AngleXForXAxis();
+                    if (Mathf.Abs(rotationAngle.x) > 90f) rotationAngle.x = 0f;
+                    break;
+                case Direction.YAxis:
+                    // TODO x,y,z が 0 の場合を考慮する
+                    tiltAngle.z = v2.AngleZForYAxis() - v1.AngleZForYAxis();
+                    tiltAngle.x = v2.AngleXForYAxis() - v1.AngleXForYAxis();
+                    doAxisRotation = v1.MagnitudeForYAxis() > radius && v2.MagnitudeForYAxis() > radius;
+                    if (doAxisRotation) rotationAngle.y = v2.AngleYForYAxis() - v1.AngleYForYAxis();
+                    if (Mathf.Abs(rotationAngle.y) > 90f) rotationAngle.y = 0f;
+                    break;
+                case Direction.ZAxis:
+                    // TODO x,y,z が 0 の場合を考慮する
+                    tiltAngle.x = v2.AngleXForZAxis() - v1.AngleXForZAxis();
+                    tiltAngle.y = v2.AngleYForZAxis() - v1.AngleYForZAxis();
+                    doAxisRotation = v1.MagnitudeForZAxis() > radius && v2.MagnitudeForZAxis() > radius;
+                    if (doAxisRotation) rotation.z = v2.AngleZForZAxis() - v1.AngleZForZAxis();
+                    if (Mathf.Abs(rotationAngle.z) > 90f) rotationAngle.z = 0f;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            // 軸を傾ける
+            var sourcePosition = context.ToWorldDirection(context.SourceLocalPosition);
+            var actualRotationAngle = _controlRigManipulator.Rotate(context.Bone, tiltAngle);
+            var rotatedSourcePosition = context.ToWorldDirection(context.SourceLocalPosition);
+            var actualMove = rotatedSourcePosition - sourcePosition;
+
+            // 軸を回転する
+            var remaining = Mathf.Max(1f - actualMove.magnitude / localMove.magnitude, 0f);
+            rotationAngle *= remaining;
+            actualRotationAngle += _controlRigManipulator.Rotate(context.Bone, rotationAngle);
+            rotatedSourcePosition = context.ToWorldDirection(context.SourceLocalPosition);
+            actualMove = rotatedSourcePosition - sourcePosition;
 
             if (verbose && (!filterZero || !Mathf.Approximately(expectedLocalMove.magnitude, 0f)))
             {
                 Debug.Log(
                     $"ApplyForceToBone: {context.Bone}\n" +
-                    $"actualLocalMove: {actualLocalMove}\n" +
-                    $"actualRotationAngle: {actualRotationAngle}\n" +
-                    $"expectedRotationAngle: {rotation.eulerAngles}\n" +
-                    $"theta: {theta}\n" +
-                    $"sinAlpha: {sinAlpha}\n" +
-                    $"rotationAxis: {rotationAxis}\n" +
+                    $"move: {force} -> {actualMove}\n" +
+                    $"sourcePosition: {sourcePosition} -> {rotatedSourcePosition}\n" +
+                    $"rotationAngle: {tiltAngle + rotationAngle} -> {actualRotationAngle}\n" +
+                    $"localSourcePosition: {v1} -> {v2}\n" +
                     $"localMove: {localMove}\n" +
-                    $"expectedLocalMove: {expectedLocalMove}\n" +
-                    $"force: {force}\n"
+                    $"axis: {axis}\n" +
+                    $"expectedLocalMove: {expectedLocalMove}\n"
                 );
             }
 
             // 力と同一方向のみを残さないと思わぬ方向に移動してしまう
-            return context.ToWorldDirection(expectedLocalMove - actualLocalMove).ProjectOnto(force);
+            return (force - actualMove).ProjectOnto(force);
         }
 
-        private void ApplyAxisRotationToBone(Context context, float rotationAngle)
+        private void ApplyAxisRotationToBone(Context context, float rotationAngle, Direction axisDirection)
         {
             if (Mathf.Abs(rotationAngle) < 0.01) return;
-            var eulerAngles = context.TargetAxisDirection * rotationAngle;
+            var eulerAngles = axisDirection.ToAxis() * rotationAngle;
             var actualRotationAngle = _controlRigManipulator.Rotate(context.Bone, eulerAngles);
 
             if (verbose)
@@ -655,50 +671,49 @@ namespace VRMarionette
                 Debug.Log(
                     $"ApplyAxisRotationToBone: {context.Bone}\n" +
                     $"actualRotationAngle: {actualRotationAngle.magnitude}\n" +
-                    $"expectedRotationAngle: {rotationAngle}\n"
+                    $"expectedRotationAngle: {rotationAngle}\n" +
+                    $"axisDirection: {axisDirection}\n"
                 );
             }
         }
 
-        private void ApplyAxisRotationToBone(Context context, Quaternion rotation)
+        private void ApplyAxisRotationToBone(Context context, Quaternion rotation, Direction axisDirection)
         {
-            var localEulerAngles = context.ToLocalRotation(rotation).eulerAngles;
-            var axisDirection = context.TargetAxisDirection;
-            ApplyAxisRotationToBone(context, Vector3.Dot(localEulerAngles, axisDirection));
+            if (rotation.eulerAngles.magnitude < 0.01) return;
+            var currLocalRotation = context.TargetTransform.localRotation;
+            var nextLocalRotation = context.GetLocalRotation(rotation);
+            var deltaRotation = Quaternion.Inverse(currLocalRotation) * nextLocalRotation;
+            deltaRotation = deltaRotation.ExtractAxisRotation(axisDirection);
+            nextLocalRotation = currLocalRotation * deltaRotation;
+            var localEulerAngles = nextLocalRotation.ToEulerAnglesWithAxis(context.TargetAxisDirection);
+            var rotatedAngles = _controlRigManipulator.SetBoneRotation(context.Bone, localEulerAngles);
+
+            if (verbose)
+            {
+                Debug.Log(
+                    $"ApplyAxisRotationToBone: {context.Bone}\n" +
+                    $"rotatedAngles: {rotatedAngles}\n" +
+                    $"localEulerAngles: {localEulerAngles}\n" +
+                    $"localRotation: {currLocalRotation.eulerAngles} + {deltaRotation.eulerAngles} -> {nextLocalRotation.eulerAngles}\n"
+                );
+            }
         }
 
         private void ApplyRotationToBone(Context context, Quaternion rotation)
         {
-            var localEulerAngles = context.ToLocalRotation(rotation).eulerAngles;
-            if (Mathf.Abs(localEulerAngles.magnitude) < 0.01) return;
-            var actualRotationAngles = _controlRigManipulator.Rotate(context.Bone, localEulerAngles);
+            if (rotation.eulerAngles.magnitude < 0.01) return;
+            var localRotation = context.GetLocalRotation(rotation);
+            var localEulerAngles = localRotation.ToEulerAnglesWithAxis(context.TargetAxisDirection);
+            var rotatedAngles = _controlRigManipulator.SetBoneRotation(context.Bone, localEulerAngles);
 
             if (verbose)
             {
                 Debug.Log(
                     $"ApplyRotationToBone: {context.Bone}\n" +
-                    $"actualRotationAngles: {actualRotationAngles}\n" +
-                    $"expectedRotationAngles: {localEulerAngles}\n"
+                    $"rotatedAngles: {rotatedAngles}\n" +
+                    $"localEulerAngles: {localEulerAngles}\n"
                 );
             }
-        }
-
-        private static float ToRadius(SphereCollider sourceCollider)
-        {
-            return sourceCollider.radius * sourceCollider.transform.localScale.z;
-        }
-
-        private static float ToRadius(CapsuleCollider targetCollider)
-        {
-            var targetScale = targetCollider.transform.localScale;
-            var scale = targetCollider.direction switch
-            {
-                (int)Direction.XAxis => targetScale.x,
-                (int)Direction.YAxis => targetScale.y,
-                (int)Direction.ZAxis => targetScale.z,
-                _ => throw new InvalidOperationException("Unknown CapsuleCollider direction")
-            };
-            return targetCollider.radius * scale;
         }
 
         private class Context
@@ -715,10 +730,10 @@ namespace VRMarionette
             public Vector3 SourceLocalPosition { get; }
 
             /// <summary>
-            /// TargetTransform を基準とした時の TargetCollider の軸方向
+            /// TargetTransform を基準とした時の骨の軸方向
             /// 力を受ける骨の軸の方向
             /// </summary>
-            public Vector3 TargetAxisDirection { get; }
+            public Direction TargetAxisDirection { get; }
 
             /// <summary>
             /// TargetCollider の Transform
@@ -769,35 +784,40 @@ namespace VRMarionette
             /// </summary>
             public Vector3 SourceToParent => ParentPosition - TargetTransform.TransformPoint(SourceLocalPosition);
 
+            /// <summary>
+            /// SourceLocalPosition に対応したワールド座標
+            /// </summary>
+            private Vector3 SourcePosition => BoneProperty.ToWorldPosition(
+                TargetTransform,
+                OriginTransform,
+                SourceLocalPosition
+            );
+
             public Context(Vector3 sourcePosition, BoneProperty target, Transform rootTransform)
             {
                 Bone = target.Bone;
 
                 TargetTransform = target.Collider.transform;
                 RootTransform = rootTransform;
-                TargetAxisDirection = ToAxis(target.Collider.direction);
+                TargetAxisDirection = target.Limit.axis;
 
-                var originTransform = TargetTransform;
-                var sourceLocalPosition = TargetTransform.InverseTransformPoint(sourcePosition)
-                                          - target.Collider.center.OrthogonalComponent(TargetAxisDirection);
-                target.FindOrigin(ref originTransform, ref sourceLocalPosition);
-                OriginTransform = originTransform;
+                var sourceLocalPosition =
+                    TargetTransform.InverseTransformPoint(sourcePosition)
+                    - target.Collider.center.OrthogonalComponent(TargetAxisDirection.ToAxis());
+                OriginTransform = target.FindOrigin(TargetTransform, ref sourceLocalPosition);
                 SourceLocalPosition = sourceLocalPosition;
             }
 
-            private Context(Context source, BoneProperty target)
+            public Context(Context source, BoneProperty target)
             {
                 Bone = target.Bone;
 
                 TargetTransform = target.Collider.transform;
                 RootTransform = source.RootTransform;
-                TargetAxisDirection = ToAxis(target.Collider.direction);
+                TargetAxisDirection = target.Limit.axis;
 
-                var originTransform = TargetTransform;
-                var sourceLocalPosition = source.SourceLocalPosition
-                                          + TargetTransform.InverseTransformPoint(source.OriginTransform.position);
-                target.FindOrigin(ref originTransform, ref sourceLocalPosition);
-                OriginTransform = originTransform;
+                var sourceLocalPosition = TargetTransform.InverseTransformPoint(source.SourcePosition);
+                OriginTransform = target.FindOrigin(TargetTransform, ref sourceLocalPosition);
                 SourceLocalPosition = sourceLocalPosition;
             }
 
@@ -807,10 +827,9 @@ namespace VRMarionette
 
                 TargetTransform = target;
                 RootTransform = source.RootTransform;
-                TargetAxisDirection = Vector3.zero;
+                TargetAxisDirection = Direction.YAxis;
                 OriginTransform = TargetTransform;
-                SourceLocalPosition = source.SourceLocalPosition
-                                      + TargetTransform.InverseTransformPoint(source.OriginTransform.position);
+                SourceLocalPosition = TargetTransform.InverseTransformPoint(source.SourcePosition);
             }
 
             public Context(Context context1, Context context2, float context1Ratio)
@@ -841,18 +860,18 @@ namespace VRMarionette
                 return TargetTransform.TransformDirection(localDirection);
             }
 
-            public Quaternion ToLocalRotation(Quaternion rotation)
+            public Quaternion GetLocalRotation(Quaternion rotation)
             {
-                var targetRotation = TargetTransform.rotation;
-                return Quaternion.Inverse(targetRotation) * rotation * targetRotation;
+                return Quaternion.Inverse(TargetTransform.parent.rotation) * rotation * TargetTransform.rotation;
             }
 
             public float ToRotationAngle(Vector3 force)
             {
+                var axis = TargetAxisDirection.ToAxis();
                 // 回転軸と直交するベクトルを求める
-                var r = SourceLocalPosition.OrthogonalComponent(TargetAxisDirection);
+                var r = SourceLocalPosition.OrthogonalComponent(axis);
                 // 回転方向を表すベクトルを求める
-                var rotationDirection = Vector3.Cross(TargetAxisDirection, r).normalized;
+                var rotationDirection = Vector3.Cross(axis, r).normalized;
 
                 // rotationDirection と大体同方向であれば正方向に回転
                 // 大体逆方向であれば負方向に回転
@@ -868,22 +887,9 @@ namespace VRMarionette
                 return Mathf.Round(move / r.magnitude * Mathf.Rad2Deg);
             }
 
-            /// <summary>
-            /// sourceTransform の forward 方向を軸として取得する
-            /// </summary>
-            /// <param name="sourceTransform"></param>
-            /// <returns>TargetTransform のローカル座標系における方向ベクトル</returns>
-            public Vector3 GetSourceAxisDirection(Transform sourceTransform)
-            {
-                return (
-                    Quaternion.Inverse(TargetTransform.rotation) * sourceTransform.rotation * Vector3.forward
-                ).normalized;
-            }
-
             public bool CanRotate()
             {
                 return Bone is
-                    HumanBodyBones.Hips or
                     HumanBodyBones.LeftFoot or
                     HumanBodyBones.RightFoot or
                     HumanBodyBones.LeftHand or
@@ -926,17 +932,6 @@ namespace VRMarionette
 
                 return null;
             }
-
-            private static Vector3 ToAxis(int capsuleDirection)
-            {
-                return capsuleDirection switch
-                {
-                    (int)Direction.XAxis => new Vector3(1, 0, 0),
-                    (int)Direction.YAxis => new Vector3(0, 1, 0),
-                    (int)Direction.ZAxis => new Vector3(0, 0, 1),
-                    _ => throw new InvalidOperationException("Unknown CapsuleCollider direction")
-                };
-            }
         }
 
         private class ForceGenerationTask
@@ -971,14 +966,6 @@ namespace VRMarionette
                 _mergedTasks = 1;
             }
 
-            public ForceGenerationTask(
-                Context context,
-                Vector3 force,
-                bool allowBodyMovement
-            ) : this(context, force, null, false, allowBodyMovement)
-            {
-            }
-
             public void Merge(ForceGenerationTask other)
             {
                 if (_allowMultiSource && other._allowMultiSource)
@@ -994,14 +981,18 @@ namespace VRMarionette
 
                 if (Rotation.HasValue && other.Rotation.HasValue)
                 {
-                    Rotation = other.Rotation * Rotation;
+                    Rotation = Quaternion.Lerp(Rotation.Value, other.Rotation.Value, 0.5f);
+                }
+                else
+                {
+                    if (other.Rotation.HasValue) Rotation = other.Rotation;
                 }
 
-                var sourceRatio = _mergedTasks / (_mergedTasks + 1f);
+                var sourceRatio = _mergedTasks / (_mergedTasks + other._mergedTasks);
                 Force = Force * sourceRatio + other.Force * (1f - sourceRatio);
                 Context = new Context(Context, other.Context, sourceRatio);
 
-                _mergedTasks++;
+                _mergedTasks += other._mergedTasks;
             }
 
             public bool IsZero()

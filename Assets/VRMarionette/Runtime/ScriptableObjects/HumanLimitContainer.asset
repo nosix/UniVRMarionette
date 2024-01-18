@@ -14,158 +14,210 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   humanLimits:
   - bone: 0
+    axis: 1
     min: {x: -180, y: -180, z: -180}
     max: {x: 180, y: 180, z: 180}
   - bone: 7
+    axis: 1
     min: {x: -45, y: -40, z: -30}
     max: {x: 60, y: 40, z: 30}
   - bone: 8
+    axis: 1
     min: {x: -45, y: -40, z: -30}
     max: {x: 60, y: 40, z: 30}
   - bone: 54
+    axis: 1
     min: {x: -10, y: -10, z: -10}
     max: {x: 10, y: 10, z: 10}
   - bone: 9
+    axis: 1
     min: {x: -30, y: -30, z: -20}
     max: {x: 15, y: 30, z: 20}
   - bone: 10
+    axis: 1
     min: {x: -30, y: -30, z: -20}
     max: {x: 15, y: 30, z: 20}
   - bone: 11
+    axis: 0
     min: {x: 0, y: -10, z: -10}
     max: {x: 0, y: 10, z: 30}
   - bone: 13
+    axis: 0
     min: {x: -90, y: -10, z: -70}
     max: {x: 40, y: 80, z: 30}
   - bone: 15
+    axis: 0
     min: {x: 0, y: 0, z: 0}
     max: {x: 0, y: 135, z: 0}
   - bone: 17
+    axis: 0
     min: {x: -90, y: -15, z: -75}
     max: {x: 0, y: 15, z: 75}
   - bone: 24
+    axis: 0
     min: {x: 0, y: -15, z: -20}
     max: {x: 0, y: 10, z: 20}
   - bone: 25
+    axis: 0
     min: {x: 0, y: -15, z: -20}
     max: {x: 0, y: 10, z: 20}
   - bone: 26
+    axis: 0
     min: {x: 0, y: -90, z: 0}
     max: {x: 0, y: 0, z: 0}
   - bone: 27
+    axis: 0
     min: {x: 0, y: 0, z: -15}
     max: {x: 0, y: 15, z: 75}
   - bone: 28
+    axis: 0
     min: {x: 0, y: 0, z: 0}
     max: {x: 0, y: 0, z: 90}
   - bone: 29
+    axis: 0
     min: {x: 0, y: 0, z: 0}
     max: {x: 0, y: 0, z: 75}
   - bone: 30
+    axis: 0
     min: {x: 0, y: 0, z: -15}
     max: {x: 0, y: 0, z: 75}
   - bone: 31
+    axis: 0
     min: {x: 0, y: 0, z: 0}
     max: {x: 0, y: 0, z: 90}
   - bone: 32
+    axis: 0
     min: {x: 0, y: 0, z: 0}
     max: {x: 0, y: 0, z: 75}
   - bone: 33
+    axis: 0
     min: {x: 0, y: -15, z: -15}
     max: {x: 0, y: 0, z: 75}
   - bone: 34
+    axis: 0
     min: {x: 0, y: 0, z: 0}
     max: {x: 0, y: 0, z: 90}
   - bone: 35
+    axis: 0
     min: {x: 0, y: 0, z: 0}
     max: {x: 0, y: 0, z: 75}
   - bone: 36
+    axis: 0
     min: {x: 0, y: -30, z: -15}
     max: {x: 0, y: 0, z: 75}
   - bone: 37
+    axis: 0
     min: {x: 0, y: 0, z: 0}
     max: {x: 0, y: 0, z: 90}
   - bone: 38
+    axis: 0
     min: {x: 0, y: 0, z: 0}
     max: {x: 0, y: 0, z: 75}
   - bone: 12
+    axis: 0
     min: {x: 0, y: -10, z: -30}
     max: {x: 0, y: 10, z: 10}
   - bone: 14
+    axis: 0
     min: {x: -90, y: -80, z: -30}
     max: {x: 40, y: 10, z: 70}
   - bone: 16
+    axis: 0
     min: {x: 0, y: -135, z: 0}
     max: {x: 0, y: 0, z: 0}
   - bone: 18
+    axis: 0
     min: {x: -90, y: -15, z: -75}
     max: {x: 0, y: 15, z: 75}
   - bone: 39
+    axis: 0
     min: {x: 0, y: -10, z: -20}
     max: {x: 0, y: 15, z: 20}
   - bone: 40
+    axis: 0
     min: {x: 0, y: -10, z: -20}
     max: {x: 0, y: 15, z: 20}
   - bone: 41
+    axis: 0
     min: {x: 0, y: 0, z: 0}
     max: {x: 0, y: 90, z: 0}
   - bone: 42
+    axis: 0
     min: {x: 0, y: -15, z: -75}
     max: {x: 0, y: 0, z: 15}
   - bone: 43
+    axis: 0
     min: {x: 0, y: 0, z: -90}
     max: {x: 0, y: 0, z: 0}
   - bone: 44
+    axis: 0
     min: {x: 0, y: 0, z: -75}
     max: {x: 0, y: 0, z: 0}
   - bone: 45
+    axis: 0
     min: {x: 0, y: 0, z: -75}
     max: {x: 0, y: 0, z: 15}
   - bone: 46
+    axis: 0
     min: {x: 0, y: 0, z: -90}
     max: {x: 0, y: 0, z: 0}
   - bone: 47
+    axis: 0
     min: {x: 0, y: 0, z: -75}
     max: {x: 0, y: 0, z: 0}
   - bone: 48
+    axis: 0
     min: {x: 0, y: 0, z: -75}
     max: {x: 0, y: 15, z: 15}
   - bone: 49
+    axis: 0
     min: {x: 0, y: 0, z: -90}
     max: {x: 0, y: 0, z: 0}
   - bone: 50
+    axis: 0
     min: {x: 0, y: 0, z: -75}
     max: {x: 0, y: 0, z: 0}
   - bone: 51
+    axis: 0
     min: {x: 0, y: 0, z: -75}
     max: {x: 0, y: 30, z: 15}
   - bone: 52
+    axis: 0
     min: {x: 0, y: 0, z: -90}
     max: {x: 0, y: 0, z: 0}
   - bone: 53
+    axis: 0
     min: {x: 0, y: 0, z: -75}
     max: {x: 0, y: 0, z: 0}
   - bone: 1
+    axis: 1
     min: {x: -120, y: -60, z: -45}
     max: {x: 30, y: 20, z: 0}
   - bone: 3
+    axis: 1
     min: {x: 0, y: 0, z: 0}
     max: {x: 120, y: 0, z: 0}
   - bone: 5
+    axis: 2
     min: {x: -30, y: 0, z: 0}
     max: {x: 15, y: 0, z: 15}
   - bone: 19
+    axis: 2
     min: {x: -30, y: 0, z: 0}
     max: {x: 30, y: 0, z: 0}
   - bone: 2
+    axis: 1
     min: {x: -120, y: -20, z: 0}
     max: {x: 30, y: 60, z: 45}
   - bone: 4
+    axis: 1
     min: {x: 0, y: 0, z: 0}
     max: {x: 120, y: 0, z: 0}
   - bone: 6
+    axis: 2
     min: {x: -30, y: 0, z: -15}
     max: {x: 15, y: 0, z: 0}
   - bone: 20
+    axis: 2
     min: {x: -30, y: 0, z: 0}
     max: {x: 30, y: 0, z: 0}

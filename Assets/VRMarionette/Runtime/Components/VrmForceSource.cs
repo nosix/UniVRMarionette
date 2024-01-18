@@ -16,8 +16,9 @@ namespace VRMarionette
         [Tooltip("The force not used for joint rotation is applied to movement.")]
         public bool useRemainingForceForMovement;
 
-        public bool onEnter;
+        public bool trace;
 
+        [Space]
         public Color focusColor = Color.yellow;
 
         [Space]
@@ -31,13 +32,13 @@ namespace VRMarionette
         // フォーカスの対象となる Capsule
         private CapsuleCollider _targetCapsule;
 
-        // 摘まみ状態が終了した後に対象の Collider 内に留まっているときは true
-        private bool _holdOff;
-
         // 摘まんでいる対象の Collider
         private Collider _holdCollider;
 
-        // 摘まみ操作中の前フレームの位置と回転
+        // 押している対象の Collider
+        private Collider _pushCollider;
+
+        // 前フレームの位置と回転
         private Vector3 _prevPosition;
         private Quaternion _prevRotation;
 
@@ -54,45 +55,38 @@ namespace VRMarionette
         {
             if (!_isInitialized) return;
 
-            if (other is CapsuleCollider capsule) Focus(capsule, true);
+            _pushCollider = other;
 
-            if (!hold && !_holdOff && onEnter)
+            if (!hold)
             {
-                _forceGenerator.QueueForceToPush(
-                    other.transform,
-                    _collider,
-                    useRemainingForceForMovement
-                );
+                RecordTransform();
             }
+
+            if (other is CapsuleCollider capsule) Focus(capsule, true);
         }
 
         private void OnTriggerExit(Collider other)
         {
-            _holdOff = false;
-
             if (other is CapsuleCollider capsule) Focus(capsule, false);
+
+            if (_pushCollider == other) _pushCollider = null;
         }
 
         private void OnTriggerStay(Collider other)
         {
             if (!_isInitialized) return;
 
-            switch (hold)
-            {
-                case true when _holdCollider is null:
-                    var t = transform;
-                    _holdCollider = other;
-                    _prevPosition = t.position;
-                    _prevRotation = t.rotation;
-                    return;
-                case false when !_holdOff && !onEnter:
-                    _forceGenerator.QueueForceToPush(
-                        other.transform,
-                        _collider,
-                        useRemainingForceForMovement
-                    );
-                    break;
-            }
+            // 摘まみ状態で摘まむ対象が定まっていないときは衝突した Collider を摘まむ対象に設定する
+            if (!hold || _holdCollider is not null) return;
+            _holdCollider = other;
+            RecordTransform();
+        }
+
+        private void RecordTransform()
+        {
+            var t = transform;
+            _prevPosition = t.position;
+            _prevRotation = t.rotation;
         }
 
         private void Focus(CapsuleCollider capsule, bool on)
@@ -163,12 +157,21 @@ namespace VRMarionette
                 if (_holdCollider is not null)
                 {
                     _holdCollider = null;
-                    _holdOff = true;
                 }
             }
 
-            if (_holdCollider is null) return;
+            if (_holdCollider is not null)
+            {
+                QueueHoldForce();
+            }
+            else
+            {
+                QueuePushForce();
+            }
+        }
 
+        private void QueueHoldForce()
+        {
             var t = transform;
             var currPosition = t.position;
             var currRotation = t.rotation;
@@ -186,9 +189,42 @@ namespace VRMarionette
             _prevRotation = currRotation;
         }
 
+        private void QueuePushForce()
+        {
+            var t = transform;
+            var currPosition = t.position;
+            var currRotation = t.rotation;
+            var force = currPosition - _prevPosition;
+
+            // 前方向のみ力を働かせる
+            var forward = _collider.transform.rotation * Vector3.forward;
+            force = force.ProjectOnto(forward);
+            if (Vector3.Dot(force, forward) < 0) force = Vector3.zero;
+
+            _forceGenerator.QueueForce(
+                _pushCollider.transform,
+                _collider.transform.position,
+                force,
+                useRemainingForceForMovement
+            );
+            _prevPosition = currPosition;
+            _prevRotation = currRotation;
+        }
+
         public void SetHold(bool value)
         {
             hold = value;
+        }
+
+        /// <summary>
+        /// trace が有効な場合にオブジェクトの position, rotation, hold をログに出力する。
+        /// </summary>
+        private void FixedUpdate()
+        {
+            if (!trace || !_isInitialized) return;
+
+            var t = transform;
+            Debug.Log($"VrmForceSource {gameObject.name} {t.position} {t.eulerAngles} {hold}");
         }
     }
 }

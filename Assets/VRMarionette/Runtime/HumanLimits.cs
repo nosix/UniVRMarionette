@@ -36,6 +36,11 @@ namespace VRMarionette
             return humanLimit;
         }
 
+        public bool TryGetValue(HumanBodyBones bone, out HumanLimit humanLimit)
+        {
+            return _entries.TryGetValue(bone, out humanLimit);
+        }
+
         public HumanLimit Get(HumanBodyBones bone)
         {
             if (_entries.TryGetValue(bone, out var humanLimit)) return humanLimit;
@@ -62,6 +67,20 @@ namespace VRMarionette
                 Mathf.Clamp(angle.y, min.y, max.y),
                 Mathf.Clamp(angle.z, min.z, max.z)
             );
+        }
+
+        public Quaternion ToRotation(HumanBodyBones bone, Vector3 angle)
+        {
+            return _entries.TryGetValue(bone, out var humanLimit)
+                ? angle.ToRotationWithAxis(humanLimit.axis)
+                : Quaternion.Euler(angle);
+        }
+
+        public Vector3 ToEulerAngles(HumanBodyBones bone, Quaternion rotation)
+        {
+            return _entries.TryGetValue(bone, out var humanLimit)
+                ? rotation.ToEulerAnglesWithAxis(humanLimit.axis)
+                : rotation.eulerAngles;
         }
     }
 }

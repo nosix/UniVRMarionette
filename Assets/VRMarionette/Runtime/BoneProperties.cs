@@ -13,7 +13,7 @@ namespace VRMarionette
         {
             _properties = properties.ToDictionary(
                 e => e.Key,
-                e => new BoneProperty(e.Value.Transform, e.Value.Bone, e.Value.Collider, this)
+                e => new BoneProperty(e.Value.Transform, e.Value.Bone, e.Value.Limit, e.Value.Collider, this)
             );
         }
 
@@ -36,9 +36,9 @@ namespace VRMarionette
         {
             private readonly Dictionary<Transform, BoneProperty> _properties = new();
 
-            public void Add(HumanBodyBones bone, Transform boneTransform, CapsuleCollider collider)
+            public void Add(HumanBodyBones bone, Transform boneTransform, HumanLimit limit, CapsuleCollider collider)
             {
-                _properties.Add(boneTransform, new BoneProperty(boneTransform, bone, collider, null));
+                _properties.Add(boneTransform, new BoneProperty(boneTransform, bone, limit, collider, null));
             }
 
             public BoneProperties Build()

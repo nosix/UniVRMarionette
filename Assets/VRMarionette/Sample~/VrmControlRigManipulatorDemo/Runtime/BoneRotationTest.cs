@@ -10,6 +10,12 @@ namespace VRMarionette_Sample.VrmControlRigManipulatorDemo.Runtime
     {
         public bool runTest;
 
+        public Vector3 min;
+        public Vector3 max;
+        public Vector3 step;
+
+        public new Transform camera;
+
         public void Run(Vrm10Instance instance)
         {
             var manipulator = instance.GetComponent<VrmControlRigManipulator>()
@@ -17,8 +23,10 @@ namespace VRMarionette_Sample.VrmControlRigManipulatorDemo.Runtime
             if (runTest) StartCoroutine(RunTest(manipulator));
         }
 
-        private static IEnumerator RunTest(VrmControlRigManipulator manipulator)
+        private IEnumerator RunTest(VrmControlRigManipulator manipulator)
         {
+            var animator = manipulator.GetComponent<Animator>();
+
             for (HumanBodyBones bone = 0; bone < HumanBodyBones.LastBone; bone++)
             {
                 if (bone is
@@ -29,27 +37,60 @@ namespace VRMarionette_Sample.VrmControlRigManipulatorDemo.Runtime
 
                 Debug.Log($"Test {bone}");
 
-                for (var x = -180; x <= 180; x += 45)
+                var cameraPosition = animator.GetBoneTransform(bone).position;
+                cameraPosition.z += 1f;
+                camera.position = cameraPosition;
+
+                for (var x = min.x; x <= max.x; x += step.x)
                 {
-                    for (var y = -180; y <= 180; y += 45)
+                    for (var y = min.y; y <= max.y; y += step.y)
                     {
-                        for (var z = -180; z <= 180; z += 45)
+                        for (var z = min.z; z <= max.z; z += step.z)
                         {
                             manipulator.SetBoneRotation(bone, Vector3.zero);
                             var angles = new Vector3(x, y, z);
                             var deltaAngles = manipulator.SetBoneRotation(bone, angles);
                             var actualAngles = manipulator.GetBoneRotation(bone);
 
-                            var diff = (actualAngles - deltaAngles).magnitude;
-                            if (diff > 0.01)
+                            var isValidX = Mathf.Abs(deltaAngles.x) < 0.1f || angles.x / deltaAngles.x > 0.9f;
+                            var isValidY = Mathf.Abs(deltaAngles.y) < 0.1f || angles.y / deltaAngles.y > 0.9f;
+                            var isValidZ = Mathf.Abs(deltaAngles.z) < 0.1f || angles.z / deltaAngles.z > 0.9f;
+
+                            if (!isValidX || !isValidY || !isValidZ)
                             {
-                                Debug.LogError($"Fail: {bone} {angles}\n{deltaAngles} != {actualAngles}\n{diff}");
+                                var angle = Quaternion.Angle(
+                                    manipulator.HumanLimits.ToRotation(bone, actualAngles),
+                                    manipulator.HumanLimits.ToRotation(bone, angles)
+                                );
+
+                                if (angle > 0.01)
+                                {
+                                    Debug.LogError(
+                                        $"Fail: {bone}\n" +
+                                        $"angles={angles}\n" +
+                                        $"deltaAngles={deltaAngles}\n" +
+                                        $"actualAngles={actualAngles}\n" +
+                                        $"angle={angle}\n"
+                                    );
+                                }
+                                else
+                                {
+                                    Debug.LogWarning(
+                                        $"Warning: {bone}\n" +
+                                        "The values are different, but the posture is the same.\n" +
+                                        $"angles={angles}\n" +
+                                        $"deltaAngles={deltaAngles}\n" +
+                                        $"actualAngles={actualAngles}\n"
+                                    );
+                                }
                             }
 
                             yield return null;
                         }
                     }
                 }
+
+                manipulator.SetBoneRotation(bone, Vector3.zero);
             }
 
             Debug.Log("Finished");
