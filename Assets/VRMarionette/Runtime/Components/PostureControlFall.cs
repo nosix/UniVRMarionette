@@ -1,14 +1,13 @@
 using System;
 using UnityEngine;
-using UniVRM10;
 
 namespace VRMarionette
 {
     public class PostureControlFall : MonoBehaviour, IPostureControl
     {
-        private VrmControlRigManipulator _manipulator;
-        private VrmForceGenerator _forceGenerator;
-        private VrmRigidbody _vrmRigidbody;
+        private HumanoidManipulator _manipulator;
+        private ForceResponder _forceResponder;
+        private GravityApplier _gravityApplier;
         private Animator _animator;
 
         private float _upperArmLength;
@@ -16,16 +15,16 @@ namespace VRMarionette
         private float _lowerLegLength;
         private FallLandingAction _fallLandingAction;
 
-        public void Initialize(Vrm10Instance instance)
+        public void Initialize(GameObject instance)
         {
-            _manipulator = instance.GetComponent<VrmControlRigManipulator>() ?? throw new InvalidOperationException(
-                "The VrmInstance does not have VrmControlRigManipulator component.");
-            _forceGenerator = instance.GetComponent<VrmForceGenerator>() ?? throw new InvalidOperationException(
-                "The VrmInstance does not have VrmForceGenerator component.");
-            _vrmRigidbody = instance.GetComponent<VrmRigidbody>() ?? throw new InvalidOperationException(
-                "The VrmInstance does not have VrmRigidbody component.");
+            _manipulator = instance.GetComponent<HumanoidManipulator>() ?? throw new InvalidOperationException(
+                "The PostureControlFall component requires HumanoidManipulator component.");
+            _forceResponder = instance.GetComponent<ForceResponder>() ?? throw new InvalidOperationException(
+                "The PostureControlFall component requires ForceResponder component.");
+            _gravityApplier = instance.GetComponent<GravityApplier>() ?? throw new InvalidOperationException(
+                "The PostureControlFall component requires GravityApplier component.");
             _animator = instance.GetComponent<Animator>() ?? throw new InvalidOperationException(
-                "The VrmInstance does not have Animator component.");
+                "The PostureControlFall component requires Animator component.");
 
             // 身体の中心軸から肘までの長さを測定する
             var neckPosition = _animator.GetBoneTransform(HumanBodyBones.Neck).position;
@@ -76,14 +75,14 @@ namespace VRMarionette
         {
             var hipsTransform = _animator.GetBoneTransform(HumanBodyBones.Hips);
             var hipsPosition = hipsTransform.position;
-            var fallingDirection = GetFallingDirection(hipsPosition, _vrmRigidbody.CentroidPosition);
+            var fallingDirection = GetFallingDirection(hipsPosition, _gravityApplier.CentroidPosition);
             var isFallingForward = IsFallingForward(hipsTransform, fallingDirection);
             var isHandAboveFoot = IsHandAboveFoot(_animator);
             var isFootForward = IsFootForward(
                 hipsPosition,
                 _animator.GetBoneTransform(HumanBodyBones.LeftFoot).position,
                 _animator.GetBoneTransform(HumanBodyBones.RightFoot).position,
-                _vrmRigidbody.CentroidPosition
+                _gravityApplier.CentroidPosition
             );
             return !isHandAboveFoot
                 ? new FallAndLandOnFoot(this, _animator)
@@ -242,8 +241,8 @@ namespace VRMarionette
             protected Vector3 OriginPosition { private set; get; }
             protected Vector3 BaseGoalPosition { private set; get; }
 
-            protected Vector3 GroundPosition => _instance._vrmRigidbody.GroundPosition;
-            protected Vector3 CentroidPosition => _instance._vrmRigidbody.CentroidPosition;
+            protected Vector3 GroundPosition => _instance._gravityApplier.GroundPosition;
+            protected Vector3 CentroidPosition => _instance._gravityApplier.CentroidPosition;
             protected float UpperLegLength => _instance._upperLegLength;
             protected float LowerLegLength => _instance._lowerLegLength;
 
@@ -253,7 +252,7 @@ namespace VRMarionette
             {
                 _instance = instance;
 
-                var boneProperties = instance._forceGenerator.BoneProperties;
+                var boneProperties = instance._forceResponder.BoneProperties;
                 Head = new ControlPoint(animator.GetBoneTransform(HumanBodyBones.Head), boneProperties);
                 Hips = new ControlPoint(animator.GetBoneTransform(HumanBodyBones.Hips), boneProperties);
                 LeftHand = new ControlPoint(animator.GetBoneTransform(HumanBodyBones.LeftHand), boneProperties);
@@ -316,7 +315,7 @@ namespace VRMarionette
                 var basePosition = controlPoint.BottomPosition;
 
                 // 基準が接地していたら移動しない
-                if (basePosition.y - groundPosition.y < _instance._vrmRigidbody.nearDistance) return;
+                if (basePosition.y - groundPosition.y < _instance._gravityApplier.nearDistance) return;
 
                 // 基準が落下する位置を推定する
                 var basePositionOnGround = GetPositionOnGroundPlane(
@@ -336,7 +335,7 @@ namespace VRMarionette
 
             protected bool IsOnGround(ControlPoint controlPoint)
             {
-                return controlPoint.BottomPosition.y - GroundPosition.y < _instance._vrmRigidbody.nearDistance;
+                return controlPoint.BottomPosition.y - GroundPosition.y < _instance._gravityApplier.nearDistance;
             }
 
             protected bool IsAboveGoalHeight(ControlPoint controlPoint)
@@ -372,7 +371,7 @@ namespace VRMarionette
 
             private void Move(Transform target, Vector3 forcePoint, Vector3 movement, bool allowBodyMovement)
             {
-                _instance._forceGenerator.QueueForce(
+                _instance._forceResponder.QueueForce(
                     target,
                     forcePoint,
                     movement,
@@ -421,7 +420,7 @@ namespace VRMarionette
 
             private void Rotate(Transform target, Quaternion rotation)
             {
-                _instance._forceGenerator.QueueForce(
+                _instance._forceResponder.QueueForce(
                     target,
                     target.position,
                     Vector3.zero,

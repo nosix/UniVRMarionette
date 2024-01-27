@@ -17,19 +17,19 @@
   },
   "samples": [
     {
-      "displayName": "VrmControlRigManipuratorDemo",
-      "description": "Demo for manipulating a model using VrmControlRigManipulator.",
-      "path": "Sample~/VrmControlRigManipulatorDemo"
+      "displayName": "HumanoidManipuratorDemo",
+      "description": "Demo for manipulating a model using HumanoidManipulator.",
+      "path": "Sample~/HumanoidManipulatorDemo"
     },
     {
-      "displayName": "VrmForceGeneratorDemo",
-      "description": "Demo for manipulating a model using VrmForceGenerator and VrmForceSource",
-      "path": "Sample~/VrmForceGeneratorDemo"
+      "displayName": "ForceResponderDemo",
+      "description": "Demo for manipulating a model using ForceResponder and ForceSource",
+      "path": "Sample~/ForceResponderDemo"
     },
     {
-      "displayName": "VrmRigidbodyDemo",
+      "displayName": "GravityApplierDemo",
       "description": "Demo for applying the effects of gravity",
-      "path": "Sample~/VrmRigidbodyDemo"
+      "path": "Sample~/GravityApplierDemo"
     }
   ]
 }

@@ -9,13 +9,16 @@ namespace VRMarionette
         public VRM10SpringBoneColliderGroup[] springBoneColliderGroups;
 
         [Space]
-        public VrmForceSource[] forceSources;
+        public ForceSource[] forceSources;
 
         [Space]
+        [Tooltip("Setting this will activate the HumanoidManipulator component.")]
         public HumanLimitContainer humanLimits;
 
+        [Tooltip("Setting this will activate the ForceResponder component.")]
         public ForceFieldContainer forceFields;
 
+        [Tooltip("Setting this will activate the GravityApplier component.")]
         public BodyWeightContainer bodyWeights;
 
         private void Start()
@@ -38,19 +41,15 @@ namespace VRMarionette
             if (humanLimits)
             {
                 // ControlRig を操作する機能を追加する
-                var vrmControlRigManipulator =
-                    instance.GetComponent<VrmControlRigManipulator>() ??
-                    instance.gameObject.AddComponent<VrmControlRigManipulator>();
-                vrmControlRigManipulator.Initialize(instance, humanLimits);
+                var vrmControlRigManipulator = instance.gameObject.GetOrAddComponent<HumanoidManipulator>();
+                vrmControlRigManipulator.Initialize(humanLimits);
             }
 
             if (forceFields)
             {
                 // Collider の衝突により力を働かせる機能を追加する
-                var vrmForceGenerator =
-                    instance.GetComponent<VrmForceGenerator>() ??
-                    instance.gameObject.AddComponent<VrmForceGenerator>();
-                vrmForceGenerator.Initialize(instance, forceFields);
+                var vrmForceGenerator = instance.transform.gameObject.GetOrAddComponent<ForceResponder>();
+                vrmForceGenerator.Initialize(forceFields);
                 foreach (var forceSource in forceSources)
                 {
                     forceSource.Initialize(vrmForceGenerator);
@@ -60,10 +59,8 @@ namespace VRMarionette
             if (bodyWeights)
             {
                 // 重力の演算をする機能を追加する
-                var vrmRigidbody =
-                    instance.GetComponent<VrmRigidbody>() ??
-                    instance.gameObject.AddComponent<VrmRigidbody>();
-                vrmRigidbody.Initialize(instance, bodyWeights);
+                var vrmRigidbody = instance.transform.gameObject.GetOrAddComponent<GravityApplier>();
+                vrmRigidbody.Initialize(bodyWeights);
             }
         }
     }

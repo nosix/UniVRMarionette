@@ -1,0 +1,18 @@
+{
+    "name": "GravityApplierDemo.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:29db6ee0785c457eb4886eeeabb8f0d0"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

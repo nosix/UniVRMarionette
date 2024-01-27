@@ -38,20 +38,20 @@ namespace VRMarionette
             SetupControlRigMixer(instance.gameObject);
             SetupForceGenerator(instance.gameObject);
             SetupRigidbody(instance.gameObject);
-            SetupPostureControl(instance);
+            SetupPostureControl(instance.gameObject);
         }
 
         private void SetupControlRigMixer(GameObject instance)
         {
             if (!enableMixer) return;
-            var mixer = instance.GetOrAddComponent<VrmControlRigMixer>();
-            if (mixer.vrmManipulator is not null) return;
-            mixer.vrmManipulator = instance.GetComponent<VrmControlRigManipulator>();
+            var mixer = instance.GetOrAddComponent<HumanoidMixer>();
+            if (mixer.manipulator is not null) return;
+            mixer.manipulator = instance.GetComponent<HumanoidManipulator>();
         }
 
         private void SetupForceGenerator(GameObject instance)
         {
-            var forceGenerator = instance.GetComponent<VrmForceGenerator>();
+            var forceGenerator = instance.GetComponent<ForceResponder>();
             if (forceGenerator is null) return;
             forceGenerator.verbose = verbose;
             forceGenerator.filterZero = filterZero;
@@ -59,7 +59,7 @@ namespace VRMarionette
 
         private void SetupRigidbody(GameObject instance)
         {
-            var vrmRigidbody = instance.GetComponent<VrmRigidbody>();
+            var vrmRigidbody = instance.GetComponent<GravityApplier>();
             if (vrmRigidbody is null) return;
             vrmRigidbody.isKinematic = isKinematic;
             vrmRigidbody.nearDistance = nearDistance;
@@ -68,9 +68,9 @@ namespace VRMarionette
             vrmRigidbody.ground = ground;
         }
 
-        private void SetupPostureControl(Vrm10Instance instance)
+        private void SetupPostureControl(GameObject instance)
         {
-            var vrmRigidbody = instance.GetComponent<VrmRigidbody>();
+            var vrmRigidbody = instance.GetComponent<GravityApplier>();
             if (vrmRigidbody is null) return;
 
             var postureControlInstance = postureControl switch

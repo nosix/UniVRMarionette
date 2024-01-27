@@ -1,10 +1,10 @@
-using UniVRM10;
+using UnityEngine;
 
 namespace VRMarionette
 {
     public interface IPostureControl
     {
-        public void Initialize(Vrm10Instance instance);
+        public void Initialize(GameObject instance);
 
         /// <summary>
         /// 姿勢制御の有効/無効を切り替える
