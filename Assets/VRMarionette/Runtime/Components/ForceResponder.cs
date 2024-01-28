@@ -561,14 +561,13 @@ namespace VRMarionette
         {
             var axis = context.TargetAxisDirection.ToAxis();
 
-            // 骨の軸回りの回転の影響を受けない様にする
-            var localRotation =
-                context.TargetTransform.localRotation.ToEulerAnglesWithAxis(context.TargetAxisDirection);
-            localRotation -= Vector3.Scale(localRotation, axis);
-            var rotation =
-                localRotation.ToRotationWithAxis(context.TargetAxisDirection)
-                * context.TargetTransform.parent.rotation;
-            var expectedLocalMove = Quaternion.Inverse(rotation) * force;
+            // 骨の軸回りの回転が存在すると骨の軸回りの回転により力の方向が変わってしまう
+            // 骨の軸回りの回転の分だけ力の向きを元に戻す
+            var localAxisRotation = Vector3.Scale(
+                context.TargetTransform.localRotation.ToEulerAnglesWithAxis(context.TargetAxisDirection),
+                axis
+            ).ToRotationWithAxis(context.TargetAxisDirection);
+            var expectedLocalMove = localAxisRotation * context.ToLocalDirection(force);
 
             // 骨の軸と同一方向の力で回転すると動きが不自然になるので行わない
             var localMove = expectedLocalMove - Vector3.Scale(expectedLocalMove, axis);
@@ -609,7 +608,7 @@ namespace VRMarionette
                     tiltAngle.x = v2.AngleXForZAxis() - v1.AngleXForZAxis();
                     tiltAngle.y = v2.AngleYForZAxis() - v1.AngleYForZAxis();
                     doAxisRotation = v1.MagnitudeForZAxis() > radius && v2.MagnitudeForZAxis() > radius;
-                    if (doAxisRotation) rotation.z = v2.AngleZForZAxis() - v1.AngleZForZAxis();
+                    if (doAxisRotation) rotationAngle.z = v2.AngleZForZAxis() - v1.AngleZForZAxis();
                     if (Mathf.Abs(rotationAngle.z) > 90f) rotationAngle.z = 0f;
                     break;
                 default:
