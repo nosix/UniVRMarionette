@@ -13,12 +13,14 @@ namespace VRMarionette.MetaXR
         public OVRControllerHelper controller;
 
         [Header("Spring Bone Colliders")]
+        [Space]
         public VRM10SpringBoneCollider palm;
 
         public VRM10SpringBoneCollider thumb;
         public VRM10SpringBoneCollider index;
         public VRM10SpringBoneCollider ring;
 
+        [Space]
         public UnityEvent<bool> onGrab;
 
         private OVRSkeleton _skeleton;

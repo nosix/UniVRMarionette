@@ -25,33 +25,31 @@ VRMMarionette 本体のパッケージです。
 
 Components
 
-- VrmControlRigManipulator
+- HumanoidManipulator
    - モデルの各 Bone を回転させる Component
-   - HumanLimitContainer により関節の角度に上限を設定する
-- VrmControlRigMixer
-   - Editor 上で VrmControlRigManipulator を介して各 Bone を操作できる様にする Component
+   - HumanLimitContainer により関節の角度に制限を設定する
+     (注意 : 角度の制限が緩すぎるとクォータニオンからオイラー角を復元できずに曲がり方がおかしくなる場合あり)
+- HumanoidMixer
+   - Editor 上で HumanoidManipulator を介して各 Bone を操作できる様にする Component
    - デバッグ用
-- VrmForceGenerator
+- ForceResponder
    - Collider や Bone の状態に基づいて回転量を計算して各 Bone の状態を変化させる Component
-   - Bone の回転には VrmControlRigManipulator を使用する
+   - Bone の回転には HumanoidManipulator を使用する
    - 各 Bone に CapsuleCollider を設定する
    - CapsuleCollider の位置や大きさは ForceFieldContainer で微調整可能
-   - useRemainingForceForMovement を true にすると関節の回転に適用されなかった力を移動に使用する
-- VrmForceSource
+- ForceSource
    - 回転や移動のトリガーとなる Component
    - SphereCollider を設定する
-   - SphereCollider が VrmForceGenerator の CapsuleCollider と接触することで各 Bone に変化が生じる
+   - SphereCollider が ForceResponder の CapsuleCollider と接触することで各 Bone に変化が生じる
    - hold が true の場合は摘まみ操作、false の場合は押し操作になる
-   - onEnter が true の場合は OnTriggerEnter が発生した場合のみトリガーし、
-     false の場合は OnTriggerStay が発生した場合にトリガーする。
-     (押し操作のみ)
+   - useRemainingForceForMovement を true にすると関節の回転に適用されなかった力を移動に使用する
    - GameObject に IFocusIndicator を実装した Component が設定されている場合、
      OnTriggerEnter が発生した時にその Component に focusColor を設定する 
-- VrmRigidbody
+- GravityApplier
    - モデルの重心を計算して重力の影響を処理する機能を提供する
    - 接地している位置と重心の位置が uprightThresholdDistance を超える場合は姿勢を崩す
    - 接地している位置は y 座標が最も低い身体部位の位置を使用する
-      - 複数の部位の位置が同じ高さ(nearDistance 以内)の場合はそれらの位置の平均を使用する
+      - 複数の部位の位置が大体同じ(nearDistance 以内の)高さの場合はそれらの位置の平均を使用する
    - isKinematic が true になると重力の影響を受けなくなる
       - Rigidbody の isKinematic が true になる
    - centroid に設定すると重心の位置を可視化可能(デバッグ用)
@@ -61,15 +59,19 @@ Components
    - Assets/StreamingAssets フォルダに置かれた VRM ファイルを読み込む
    - 初期化処理を行う (VrmLoader を使用しない場合は別途実装が必要)
       - 揺れ物と干渉する SpringBone の設定 (springBoneColliderGroups を使用)
-      - VrmControlRigManipulator の初期化 (humanLimits を使用)
-      - VrmForceGenerator の初期化 (forceFields を使用)
-      - VrmForceSource の初期化 (forceSources を使用)
-      - enableMixer が true の場合は VrmControlRigMixer の追加
+      - HumanoidManipulator の初期化 (humanLimits を使用)
+      - ForceResponder の初期化 (forceFields を使用)
+      - GravityApplier の初期化 (bodyWeights を使用)
+      - ForceSource の初期化 (forceSources を使用)
+      - ロードが完了すると onLoaded に登録したコールバックが実行される
+- VrmMarionetteConfig
+   - 各 Component の初期値を設定する Component
+   - 初期値を変更しない場合には不要
 
 Interface
 
 - IFocusIndicator
-   - VrmForceSource が設定された GameObject に IFocusIndicator を実装した Component を設定すると、
+   - ForceSource が設定された GameObject に IFocusIndicator を実装した Component を設定すると、
      Collider が接触した際に FocusIndicator に色が設定される
 
 ### MetaXR : `com.github.nosix.vrm.meta.xr`
@@ -80,15 +82,15 @@ Meta XR All-in-One SDK に依存しており併せてダウンロードされま
 Prefab
 
 - VrmMarionetteHand
-   - 揺れ物と干渉する SpringBoneCollider や回転や移動のトリガーとなる VrmForceSource を持つ
-   - OVRHand を設定すると Hand Tracking が有効になる 
+   - 揺れ物と干渉する SpringBoneCollider や回転や移動のトリガーとなる ForceSource を持つ
+   - Hand に OVRHand を設定すると Hand Tracking が有効になる 
       - OVRSkeleton の位置と回転を追跡して、中指の付け根(Palm)、親指の先(Thumb)、人差指の先(Index)、小指の先(Ring)に設定された SpringBoneCollider を動かす
       - 親指の先と人差指の先が grabThresholdDistance より近付いた場合に摘まみ状態にする
       - 状態が変わった時に onGrab を呼び出す (摘まみ状態ならば true を引数に渡す)
-   - OVRControllerHelper を設定すると Controller Tracking が有効になる
+   - Controller に OVRControllerHelper を設定すると Controller Tracking が有効になる
       - OVRControllerHelper の位置と回転を追跡して、Palm に設定された SpringBoneCollider を動かす
-      - 摘まみ状態にする場合には Grab メソッドを引数 true で呼び出す
-      - 状態が変わった時に onGrab を呼び出す (摘まみ状態ならば true を引数に渡す)
+      - 摘まみ状態にする場合には Grab メソッドを引数 true で呼び出す必要がある
+      - 摘まみ状態が変わった時に onGrab が呼び出される (摘まみ状態ならば引数の値は true)
 
 URP (Shader and Material)
 
@@ -151,7 +153,6 @@ Prefab
    5. Game Object を作成する
       - 以降 VRM Model と呼ぶ
    6. VRM Model に VrmLoader Script を追加し、以下を設定する
-      - Vrm File Name
       - Spring Bone Collider Groups
          - VrmMarionetteHand
       - Force Sources
@@ -160,6 +161,7 @@ Prefab
          - Packages/VRMarionette/Runtime/ScriptableObjects/HumanLimitContainer
       - Force Fields
          - Packages/VRMarionette/Runtime/ScriptableObjects/ForceFieldContainer
+      - Vrm File Name
    7. VRM Model の位置と回転を調整する
       - 例えば、Position z=1, Rotation y=180
 5. Build Settings を開く

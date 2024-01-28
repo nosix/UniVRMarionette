@@ -6,15 +6,15 @@ namespace VRMarionette
 {
     public class VrmMarionetteConfig : MonoBehaviour
     {
-        [Header("ControlRigMixer")] [Space]
+        [Header("HumanoidMixer")] [Space]
         public bool enableMixer;
 
-        [Header("ForceGenerator")] [Space]
+        [Header("ForceResponder")] [Space]
         public bool verbose;
 
         public bool filterZero = true;
 
-        [Header("Rigidbody")] [Space]
+        [Header("GravityApplier")] [Space]
         public bool isKinematic;
 
         [Tooltip(
