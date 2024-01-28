@@ -471,11 +471,18 @@ namespace VRMarionette
                     $"prevTotalLength: {pl} = {pl1} + {pl2}\n" +
                     $"lowerHypotenuse: {hl1}\n" +
                     $"upperHypotenuse: {hl2}\n" +
+                    $"moveAmount: {moveAmount}\n" +
+                    $"forceOnPath: {forceOnPath}\n" +
+                    $"movePath: {movePath}\n" +
                     $"force: {force}\n"
                 );
             }
 
+            var parentTransform = context.TargetTransform.parent;
+
             var lowerBone = context.Bone;
+            var upperBone = BoneProperties.Get(parentTransform).Bone;
+
             var lowerRotationAngles = lowerBone switch
             {
                 HumanBodyBones.LeftLowerLeg => new Vector3(deltaAngle1, 0, 0),
@@ -485,16 +492,21 @@ namespace VRMarionette
                 _ => throw new InvalidOperationException($"This process cannot be performed on bone {lowerBone}.")
             };
 
-            var upperBone = BoneProperties.Get(context.TargetTransform.parent).Bone;
-            var upperRotationAngles = upperBone switch
-            {
-                HumanBodyBones.LeftUpperLeg => new Vector3(-deltaAngle2, 0, 0),
-                HumanBodyBones.RightUpperLeg => new Vector3(-deltaAngle2, 0, 0),
-                HumanBodyBones.LeftUpperArm => new Vector3(0, -deltaAngle2, 0),
-                HumanBodyBones.RightUpperArm => new Vector3(0, deltaAngle2, 0),
-                _ => throw new InvalidOperationException($"This process cannot be performed on bone {upperBone}.")
-            };
+            // Lower Bone の回転の反対方向の回転を Upper Bone の回転とする
+            // Upper Bone の骨の軸回りの回転を考慮する
+            var axis = context.TargetAxisDirection.ToAxis();
+            var localLowerRotation =
+                (deltaAngle2 / deltaAngle1 * lowerRotationAngles).ToRotationWithAxis(context.TargetAxisDirection);
+            var upperAxisRotation = Vector3.Scale(
+                parentTransform.localRotation.ToEulerAnglesWithAxis(context.TargetAxisDirection),
+                axis
+            );
+            var localUpperRotation =
+                upperAxisRotation.ToRotationWithAxis(context.TargetAxisDirection) *
+                Quaternion.Inverse(localLowerRotation);
+            var upperRotationAngles = localUpperRotation.ToEulerAnglesWithAxis(context.TargetAxisDirection);
 
+            // 回転する
             var prevChildPosition = context.ChildPosition;
             var actualLowerRotationAngles = _manipulator.Rotate(lowerBone, lowerRotationAngles);
             var actualUpperRotationAngles = _manipulator.Rotate(upperBone, upperRotationAngles);
