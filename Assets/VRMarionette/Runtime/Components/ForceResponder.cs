@@ -504,7 +504,10 @@ namespace VRMarionette
             var localUpperRotation =
                 upperAxisRotation.ToRotationWithAxis(context.TargetAxisDirection) *
                 Quaternion.Inverse(localLowerRotation);
-            var upperRotationAngles = localUpperRotation.ToEulerAnglesWithAxis(context.TargetAxisDirection);
+            var upperRotationAngles =　Vector3.Scale(
+                localUpperRotation.ToEulerAnglesWithAxis(context.TargetAxisDirection),
+                Vector3.one - axis
+            );
 
             // 回転する
             var prevChildPosition = context.ChildPosition;
