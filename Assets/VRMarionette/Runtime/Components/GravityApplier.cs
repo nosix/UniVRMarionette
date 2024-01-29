@@ -19,21 +19,26 @@ namespace VRMarionette
         [Tooltip(
             "If the distance between the center of gravity and the ground contact point is within this value range, " +
             "the body will stand upright.")]
-        public Vector3 uprightThresholdDistance = new(0.2f, 1f, 0.3f);
+        public Vector3 uprightThresholdDistance = new(0.2f, 1f, 0.2f);
 
         public Transform centroid;
-        public Transform ground;
+        public Transform bottom;
 
         public IPostureControl PostureControl { get; set; }
         public Vector3 CentroidPosition { get; private set; }
-        public Vector3 GroundPosition { get; private set; }
+        public Vector3 BottomPosition { get; private set; }
 
         private bool _initialized;
         private bool _postureFixed;
         private Rigidbody _rigidbody;
         private Transform _hipsTransform;
         private IReadOnlyList<WeightUnit> _weightUnits;
-        private BoneProperties _boneProperties;
+
+        private IReadOnlyList<BoneProperty> _spineBones;
+        private IReadOnlyList<BoneProperty> _leftArmBones;
+        private IReadOnlyList<BoneProperty> _rightArmBones;
+        private IReadOnlyList<BoneProperty> _leftLegBones;
+        private IReadOnlyList<BoneProperty> _rightLegBones;
 
         public void Initialize(BodyWeightContainer bodyWeights)
         {
@@ -54,6 +59,9 @@ namespace VRMarionette
                 RigidbodyConstraints.FreezeRotationY |
                 RigidbodyConstraints.FreezeRotationZ;
 
+            // Discrete では足が地面の Collider を突き抜けることがある
+            _rigidbody.collisionDetectionMode = CollisionDetectionMode.Continuous;
+
             var animator = GetComponent<Animator>() ?? throw new InvalidOperationException(
                 "The GravityApplier requires the Animator component.");
 
@@ -65,7 +73,39 @@ namespace VRMarionette
             var forceGenerator = GetComponent<ForceResponder>() ?? throw new InvalidOperationException(
                 "The GravityApplier requires the ForceResponder component.");
 
-            _boneProperties = forceGenerator.BoneProperties;
+            var boneProperties = forceGenerator.BoneProperties;
+            _spineBones = CreateBonePropertyList(animator, boneProperties, new[]
+            {
+                HumanBodyBones.Hips,
+                HumanBodyBones.Spine,
+                HumanBodyBones.Chest,
+                HumanBodyBones.UpperChest,
+                HumanBodyBones.Head
+            });
+            _leftArmBones = CreateBonePropertyList(animator, boneProperties, new[]
+            {
+                HumanBodyBones.LeftUpperArm,
+                HumanBodyBones.LeftLowerArm,
+                HumanBodyBones.LeftHand
+            });
+            _rightArmBones = CreateBonePropertyList(animator, boneProperties, new[]
+            {
+                HumanBodyBones.RightUpperArm,
+                HumanBodyBones.RightLowerArm,
+                HumanBodyBones.RightHand
+            });
+            _leftLegBones = CreateBonePropertyList(animator, boneProperties, new[]
+            {
+                HumanBodyBones.LeftUpperLeg,
+                HumanBodyBones.LeftLowerLeg,
+                HumanBodyBones.LeftFoot
+            });
+            _rightLegBones = CreateBonePropertyList(animator, boneProperties, new[]
+            {
+                HumanBodyBones.RightUpperLeg,
+                HumanBodyBones.RightLowerLeg,
+                HumanBodyBones.RightFoot
+            });
 
             _initialized = true;
 
@@ -86,6 +126,25 @@ namespace VRMarionette
                 .ToList();
         }
 
+        private static IReadOnlyList<BoneProperty> CreateBonePropertyList(
+            Animator animator,
+            BoneProperties properties,
+            IEnumerable<HumanBodyBones> bones
+        )
+        {
+            var list = new List<BoneProperty>();
+
+            foreach (var bone in bones)
+            {
+                var boneTransform = animator.GetBoneTransform(bone);
+                if (!properties.TryGetValue(boneTransform, out var property)) continue;
+                if (!property.HasCollider) continue;
+                list.Add(property);
+            }
+
+            return list;
+        }
+
         private void SetPostureState(bool isFixed)
         {
             if (_postureFixed == isFixed) return;
@@ -99,46 +158,75 @@ namespace VRMarionette
             }
         }
 
-        private Vector3 GetCentroidPosition(out Vector3 basePosition)
+        private Vector3 GetBottomPosition()
         {
-            var centroidPosition = Vector3.zero;
-
-            basePosition = _boneProperties
-                .Get(_hipsTransform)
-                .ToBottomPosition(_hipsTransform.position);
+            var bottomPositions = new[]
+            {
+                GetBottomPosition(_spineBones),
+                GetBottomPosition(_leftArmBones),
+                GetBottomPosition(_rightArmBones),
+                GetBottomPosition(_leftLegBones),
+                GetBottomPosition(_rightLegBones),
+            };
 
             // 地面に最も近い位置を求める(複数の位置が同じ位の高さにある場合がある)
-            var minY = basePosition.y;
-            var lowestPositions = new List<Vector3> { basePosition };
-            foreach (var unit in _weightUnits)
-            {
-                var bonePosition = _boneProperties
-                    .Get(unit.BoneTransform)
-                    .ToBottomPosition(unit.BoneTransform.position);
-                if (bonePosition.y < minY)
-                {
-                    minY = bonePosition.y;
-                    lowestPositions = lowestPositions.Where(e => e.y - minY < nearDistance).ToList();
-                }
+            var minY = bottomPositions.Min(p => p.y);
+            var isLowest = bottomPositions.Select(p => p.y - minY < nearDistance).ToArray();
 
-                if (bonePosition.y - minY < nearDistance)
-                {
-                    lowestPositions.Add(bonePosition);
-                }
+            var accumulator = new Vector3Accumulator();
+
+            if (isLowest[0]) accumulator.Add(bottomPositions[0]);
+
+            if (isLowest[1] && isLowest[2])
+            {
+                accumulator.Add((bottomPositions[1] + bottomPositions[2]) / 2f);
+            }
+            else
+            {
+                if (isLowest[1]) accumulator.Add(bottomPositions[1]);
+                if (isLowest[2]) accumulator.Add(bottomPositions[2]);
             }
 
-            // 地面に最も近い位置の平均を基準の位置とする
-            basePosition = lowestPositions
-                .Aggregate(Vector3.zero, (total, e) => total + e) / lowestPositions.Count;
+            if (isLowest[3] && isLowest[4])
+            {
+                accumulator.Add((bottomPositions[3] + bottomPositions[4]) / 2f);
+            }
+            else
+            {
+                if (isLowest[3]) accumulator.Add(bottomPositions[3]);
+                if (isLowest[4]) accumulator.Add(bottomPositions[4]);
+            }
+
+            // 地面に最も近い位置の平均を求める
+            return accumulator.Average;
+        }
+
+        private static Vector3 GetBottomPosition(IReadOnlyList<BoneProperty> bonePropertiesOrder)
+        {
+            var bottomPosition = bonePropertiesOrder.First().GetBottomPosition();
+
+            foreach (var boneProperty in bonePropertiesOrder)
+            {
+                var p = boneProperty.GetBottomPosition();
+                if (p.y + Mathf.Epsilon > bottomPosition.y) continue;
+                bottomPosition = p;
+            }
+
+            return bottomPosition;
+        }
+
+        private Vector3 GetCentroidPosition()
+        {
+            var centroidPosition = Vector3.zero;
+            var totalWeight = 0f;
 
             foreach (var unit in _weightUnits)
             {
-                var delta = unit.BoneTransform.position - basePosition;
-                centroidPosition += delta * unit.Weight;
+                centroidPosition += unit.BoneTransform.position * unit.Weight;
+                totalWeight += unit.Weight;
             }
 
-            centroidPosition.y /= _weightUnits.Count;
-            return centroidPosition;
+            return centroidPosition / totalWeight;
         }
 
         private void Update()
@@ -147,21 +235,19 @@ namespace VRMarionette
 
             _rigidbody.isKinematic = isKinematic;
 
-            var centroidPosition = GetCentroidPosition(out var basePosition);
-
-            CentroidPosition = basePosition + centroidPosition;
-            GroundPosition = basePosition;
+            CentroidPosition = GetCentroidPosition();
+            BottomPosition = GetBottomPosition();
 
             if (centroid) centroid.position = CentroidPosition;
-            if (ground) ground.position = GroundPosition;
+            if (bottom) bottom.position = BottomPosition;
 
-            var yAngle = _hipsTransform.eulerAngles.y;
-            centroidPosition = Quaternion.Euler(0f, -yAngle, 0f) * centroidPosition;
+            var deltaPosition =
+                (CentroidPosition - BottomPosition).AlignWithForwardDirection(_hipsTransform.rotation);
 
             SetPostureState(
-                Mathf.Abs(centroidPosition.x) < uprightThresholdDistance.x &&
-                Mathf.Abs(centroidPosition.y) < uprightThresholdDistance.y &&
-                Mathf.Abs(centroidPosition.z) < uprightThresholdDistance.z
+                Mathf.Abs(deltaPosition.x) < uprightThresholdDistance.x &&
+                Mathf.Abs(deltaPosition.y) < uprightThresholdDistance.y &&
+                Mathf.Abs(deltaPosition.z) < uprightThresholdDistance.z
             );
         }
 
@@ -169,6 +255,20 @@ namespace VRMarionette
         {
             public Transform BoneTransform;
             public float Weight;
+        }
+
+        private struct Vector3Accumulator
+        {
+            private Vector3 _total;
+            private int _count;
+
+            public Vector3 Average => _total / _count;
+
+            public void Add(Vector3 v)
+            {
+                _total += v;
+                _count++;
+            }
         }
     }
 }

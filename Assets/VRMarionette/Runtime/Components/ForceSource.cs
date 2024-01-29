@@ -74,6 +74,8 @@ namespace VRMarionette
 
         private void OnTriggerExit(Collider other)
         {
+            if (!_isInitialized) return;
+
             if (other is CapsuleCollider capsule) Focus(capsule, false);
 
             if (_pushCollider == other) _pushCollider = null;

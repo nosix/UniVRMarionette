@@ -5,6 +5,11 @@ namespace VRMarionette
 {
     public class PostureControlFall : MonoBehaviour, IPostureControl
     {
+        // TODO 後で消す
+        public Transform goal;
+
+        private const float Epsilon = 0.001f;
+
         private HumanoidManipulator _manipulator;
         private ForceResponder _forceResponder;
         private GravityApplier _gravityApplier;
@@ -41,6 +46,8 @@ namespace VRMarionette
 
         public bool SetPostureControlState(bool isEnabled)
         {
+            // TODO 後で消す
+            Debug.Log($"SetPostureControlState {isEnabled}");
             if (isEnabled)
             {
                 if (_fallLandingAction is not null) return false;
@@ -73,67 +80,78 @@ namespace VRMarionette
 
         private FallLandingAction ChoiceFallLandingAction()
         {
-            var hipsTransform = _animator.GetBoneTransform(HumanBodyBones.Hips);
-            var hipsPosition = hipsTransform.position;
-            var fallingDirection = GetFallingDirection(hipsPosition, _gravityApplier.CentroidPosition);
-            var isFallingForward = IsFallingForward(hipsTransform, fallingDirection);
-            var isHandAboveFoot = IsHandAboveFoot(_animator);
-            var isFootForward = IsFootForward(
-                hipsPosition,
-                _animator.GetBoneTransform(HumanBodyBones.LeftFoot).position,
-                _animator.GetBoneTransform(HumanBodyBones.RightFoot).position,
-                _gravityApplier.CentroidPosition
-            );
-            return !isHandAboveFoot
+            if (!IsOnGround()) return new FreeFall(this, _animator);
+            if (!IsHandAboveFoot()) return new FallAndLandOnFoot(this, _animator);
+            if (!IsFallingForward()) return new FallBackwardLandOnHips(this, _animator);
+            return IsFootForward()
                 ? new FallAndLandOnFoot(this, _animator)
-                : !isFallingForward
-                    ? new FallBackwardLandOnHips(this, _animator)
-                    : isFootForward
-                        ? new FallAndLandOnFoot(this, _animator)
-                        : new FallForwardLandOnHand(this, _animator);
+                : new FallForwardLandOnHand(this, _animator);
         }
 
-        private static bool IsHandAboveFoot(Animator animator)
+        private bool IsHandAboveFoot()
         {
-            var leftHandPosition = animator.GetBoneTransform(HumanBodyBones.LeftHand).position;
-            var rightHandPosition = animator.GetBoneTransform(HumanBodyBones.RightHand).position;
-            var leftFootPosition = animator.GetBoneTransform(HumanBodyBones.LeftFoot).position;
-            var rightFootPosition = animator.GetBoneTransform(HumanBodyBones.RightFoot).position;
+            var leftHandPosition = _animator.GetBoneTransform(HumanBodyBones.LeftHand).position;
+            var rightHandPosition = _animator.GetBoneTransform(HumanBodyBones.RightHand).position;
+            var leftFootPosition = _animator.GetBoneTransform(HumanBodyBones.LeftFoot).position;
+            var rightFootPosition = _animator.GetBoneTransform(HumanBodyBones.RightFoot).position;
             return Mathf.Min(leftHandPosition.y, rightHandPosition.y) >
                    Mathf.Min(leftFootPosition.y, rightFootPosition.y);
         }
 
-        private static Vector3 GetFallingDirection(Vector3 hipsPosition, Vector3 centroidPosition)
+        private Vector3 GetFallingDirection()
         {
-            return (centroidPosition - hipsPosition).normalized;
+            // BottomPosition で接地している前提とする
+            var centroidPosition = _gravityApplier.CentroidPosition;
+            var groundPosition = _gravityApplier.BottomPosition;
+            return new Vector3(
+                centroidPosition.x - groundPosition.x,
+                groundPosition.y - centroidPosition.y,
+                centroidPosition.z - groundPosition.z
+            ).normalized;
         }
 
-        private static bool IsFallingForward(Transform hipsTransform, Vector3 fallingDirection)
+        private bool IsFallingForward()
         {
+            var fallingDirection = GetFallingDirection();
+            var hipsTransform = _animator.GetBoneTransform(HumanBodyBones.Hips);
             var localFallingDirection = hipsTransform.InverseTransformDirection(fallingDirection);
             return localFallingDirection.z > 0f;
         }
 
-        private static bool IsFootForward(
-            Vector3 hipsPosition,
-            Vector3 leftFootPosition,
-            Vector3 rightFootPosition,
-            Vector3 centroidPosition
-        )
+        private bool IsFootForward()
         {
-            var localCentroidPosition = centroidPosition - hipsPosition;
-            var localLeftFootPosition = leftFootPosition - hipsPosition;
-            var localRightFootPosition = rightFootPosition - hipsPosition;
-            // XZ 平面における方向と距離を調べる
-            localCentroidPosition.y = 0;
-            localLeftFootPosition.y = 0;
-            localRightFootPosition.y = 0;
-            var centroidDistance = localCentroidPosition.magnitude;
-            var leftDistance = localLeftFootPosition.magnitude *
-                               Vector3.Dot(localLeftFootPosition.normalized, localCentroidPosition.normalized);
-            var rightDistance = localRightFootPosition.magnitude *
-                                Vector3.Dot(localRightFootPosition.normalized, localCentroidPosition.normalized);
-            return leftDistance > centroidDistance || rightDistance > centroidDistance;
+            // BottomPosition で接地している前提とする
+            var hipsPosition = _animator.GetBoneTransform(HumanBodyBones.Hips).position;
+            var leftFootPosition = _animator.GetBoneTransform(HumanBodyBones.LeftFoot).position;
+            var rightFootPosition = _animator.GetBoneTransform(HumanBodyBones.RightFoot).position;
+            var centroidPosition = _gravityApplier.CentroidPosition;
+            var groundPosition = _gravityApplier.BottomPosition;
+
+            var estimatedHipsPositionOnGround =
+                GetPositionOnGroundPlane(groundPosition, centroidPosition, hipsPosition, 1f);
+            var baseDirection = estimatedHipsPositionOnGround - groundPosition;
+
+            var hipsAngle = Vector3.Angle(baseDirection, hipsPosition - groundPosition);
+            var leftFootAngle = Vector3.Angle(baseDirection, leftFootPosition - groundPosition);
+            var rightFootAngle = Vector3.Angle(baseDirection, rightFootPosition - groundPosition);
+
+            var hipsDistance = Vector3.Distance(groundPosition, hipsPosition);
+            var leftFootDistance = Vector3.Distance(groundPosition, leftFootPosition);
+            var rightFootDistance = Vector3.Distance(groundPosition, rightFootPosition);
+
+            var isLeftFootForward = leftFootAngle < hipsAngle && leftFootDistance > hipsDistance;
+            var isRightFootForward = rightFootAngle < hipsAngle && rightFootDistance > hipsDistance;
+
+            return isLeftFootForward || isRightFootForward;
+        }
+
+        private bool IsOnGround()
+        {
+            // 誤差により僅かに地面を突き抜けている場合があるので少し上の場所から下方向に地面を探す
+            var bottomPosition = _gravityApplier.BottomPosition;
+            bottomPosition.y += Epsilon;
+            var distanceToGround = MeasureDistanceToGround(bottomPosition);
+            return distanceToGround < _gravityApplier.nearDistance;
         }
 
         /// <summary>
@@ -154,64 +172,49 @@ namespace VRMarionette
             float ratio
         )
         {
-            var centroidLocalPosition = centroidPosition - groundPosition;
+            var localCentroidPosition = centroidPosition - groundPosition;
             var localPosition = position - groundPosition;
 
-            // 重心の位置と対象の位置を通る平面上で回転して XZ 平面上の点を求める
-            var rotationAxis = centroidLocalPosition.y > localPosition.y
-                ? Vector3.Cross(centroidLocalPosition, localPosition)
-                : Vector3.Cross(localPosition, centroidLocalPosition);
-            var estimatedCentroidLocalPosition = GetPointOnXZPlaneAfterRotation(centroidLocalPosition, rotationAxis);
-            var estimatedLocalPosition = GetPointOnXZPlaneAfterRotation(localPosition, rotationAxis);
+            var estimatedLocalCentroidPosition = GetPointOnXZPlaneAfterRotation(localCentroidPosition);
+            var estimatedLocalPosition = GetPointOnXZPlaneAfterRotation(localPosition);
 
-            // 重心の位置と対象の位置の間にある点を Ground 平面上の点として使う
-            var nextLocalPosition = Vector3.Lerp(estimatedCentroidLocalPosition, estimatedLocalPosition, ratio);
+            var nextLocalPosition = Vector3.Lerp(estimatedLocalCentroidPosition, estimatedLocalPosition, ratio);
             return nextLocalPosition + groundPosition;
         }
 
-        private static Vector3 GetPointOnXZPlaneAfterRotation(Vector3 localPosition, Vector3 rotationAxis)
+        private static Vector3 GetPointOnXZPlaneAfterRotation(Vector3 localPosition)
         {
-            // 点 P (localPosition) を XZ 平面上に回転させた時の回転角度の近似値を求める
-            // 点 P を Y 軸と平行に XZ 平面上に投影した点 Pxz とする
-            // ベクトル OP とベクトル OPxz の作る角度を回転角度の近似値とする
-            var approxRotationAngle = Mathf.Asin(localPosition.y / localPosition.magnitude) * Mathf.Rad2Deg;
-            var pxz = Quaternion.AngleAxis(approxRotationAngle, rotationAxis) * localPosition;
+            // 回転して XZ 平面に到達したとき
+            // 方向は localPosition を XZ 平面に投影したベクトルの延長線上であり
+            // 長さは localPosition に等しい
+            var direction = localPosition;
+            direction.y = 0;
+            direction = direction.normalized;
+            return localPosition.magnitude * direction;
+        }
 
-            // 線分 PPxz 上の点で Y=0 となる点 Q を求める
-            // Q = P + t(Pxz - P) であり、Y=0 なので t = - P.y / (Pxz.y - P.y)
-            // 但し、Pxz と P の Y 座標がほぼ同じの場合には回転を行わない
-            var dp = pxz.y - localPosition.y;
-            if (Mathf.Approximately(dp, 0f)) return localPosition;
-            var t = -localPosition.y / dp;
-            var q = localPosition + t * (pxz - localPosition);
-
-            // 点 Q は XZ 平面上の点であり、Y=0 となる点である
-            // ベクトル OQ の方向で長さがベクトル OP と同じになる点が点 P を回転させた点となる
-            return q.normalized * localPosition.magnitude;
+        /// <summary>
+        /// 指定した地点の真下にある地面までの距離を測る
+        /// </summary>
+        /// <param name="position">指定地点</param>
+        /// <returns>地面までの距離(地面が存在しない場合は Infinity)</returns>
+        private static float MeasureDistanceToGround(Vector3 position)
+        {
+            var ray = new Ray(position, Vector3.down);
+            return Physics.Raycast(ray, out var hit) ? hit.distance : Mathf.Infinity;
         }
 
         private class ControlPoint
         {
-            public Transform Transform { get; }
+            public Transform Transform => _property.Transform;
 
-            public Vector3 BottomPosition => _property.ToBottomPosition(Transform.position);
+            public Vector3 BottomPosition => _property.GetBottomPosition();
 
             private readonly BoneProperty _property;
 
             public ControlPoint(Transform transform, BoneProperties properties)
             {
-                Transform = transform;
                 _property = properties.Get(transform);
-            }
-
-            public Vector3 ToPosition(Vector3 bottomPosition)
-            {
-                return _property.ToPosition(bottomPosition);
-            }
-
-            public Vector3 ToBottomPosition(Vector3 position)
-            {
-                return _property.ToBottomPosition(position);
             }
         }
 
@@ -219,7 +222,7 @@ namespace VRMarionette
         {
             private readonly PostureControlFall _instance;
 
-            private float _timeToFall;
+            private float _timeToFall = Mathf.Infinity;
             private float _timePassed;
 
             private float DeltaRatio
@@ -241,10 +244,11 @@ namespace VRMarionette
             protected Vector3 OriginPosition { private set; get; }
             protected Vector3 BaseGoalPosition { private set; get; }
 
-            protected Vector3 GroundPosition => _instance._gravityApplier.GroundPosition;
+            protected Vector3 BottomPosition => _instance._gravityApplier.BottomPosition;
             protected Vector3 CentroidPosition => _instance._gravityApplier.CentroidPosition;
             protected float UpperLegLength => _instance._upperLegLength;
             protected float LowerLegLength => _instance._lowerLegLength;
+            protected bool IsOnGround => _instance.IsOnGround();
 
             public bool IsFinished => _timePassed >= _timeToFall;
 
@@ -296,10 +300,14 @@ namespace VRMarionette
             protected void Tick()
             {
                 _timePassed += Time.deltaTime;
+                // TODO 後で消す
+                if (IsFinished) Debug.Log("Time up");
             }
 
             protected void Finish()
             {
+                // TODO 後で消す
+                Debug.Log("Finish");
                 _timePassed = _timeToFall;
             }
 
@@ -310,7 +318,8 @@ namespace VRMarionette
             /// <param name="ratio">落下地点を基準に寄せるなら 1.0、重心に寄せるなら 0.0</param>
             protected void SetGoal(ControlPoint controlPoint, float ratio)
             {
-                var groundPosition = GroundPosition;
+                // BottomPosition は接地している前提とする
+                var groundPosition = BottomPosition;
                 var centroidPosition = CentroidPosition;
                 var basePosition = controlPoint.BottomPosition;
 
@@ -326,21 +335,19 @@ namespace VRMarionette
                 );
 
                 // 基準の目標地点を決める
-                OriginPosition = controlPoint.ToPosition(groundPosition);
-                BaseGoalPosition = controlPoint.ToPosition(basePositionOnGround);
+                OriginPosition = groundPosition;
+                BaseGoalPosition = basePositionOnGround;
+
+                // TODO 後で消す
+                if (_instance.goal) _instance.goal.position = BaseGoalPosition;
 
                 // 基準の移動時間を基準にして落下時間を設定する
                 SetTime(basePosition, basePositionOnGround);
             }
 
-            protected bool IsOnGround(ControlPoint controlPoint)
+            protected bool IsOnBottom(ControlPoint controlPoint)
             {
-                return controlPoint.BottomPosition.y - GroundPosition.y < _instance._gravityApplier.nearDistance;
-            }
-
-            protected bool IsAboveGoalHeight(ControlPoint controlPoint)
-            {
-                return controlPoint.BottomPosition.y - BaseGoalPosition.y > Mathf.Epsilon;
+                return controlPoint.BottomPosition.y - BottomPosition.y < Epsilon;
             }
 
             private Vector3 GetMovement(Vector3 currentPosition, Vector3 goalPosition)
@@ -388,9 +395,9 @@ namespace VRMarionette
                 bool allowBodyMovement
             )
             {
-                var groundPosition = GroundPosition;
+                var bottomPosition = BottomPosition;
 
-                if (currentPosition.y - groundPosition.y < Mathf.Epsilon) return;
+                if (currentPosition.y - bottomPosition.y < Mathf.Epsilon) return;
 
                 var movement = GetMovement(currentPosition, goalPosition);
                 Move(targetTransform, currentPosition, movement, allowBodyMovement);
@@ -404,9 +411,9 @@ namespace VRMarionette
                 bool allowBodyMovement
             )
             {
-                var groundPosition = GroundPosition;
+                var bottomPosition = BottomPosition;
 
-                if (currentPosition.y - groundPosition.y < Mathf.Epsilon) return;
+                if (currentPosition.y - bottomPosition.y < Mathf.Epsilon) return;
 
                 var movement = GetMovement(currentPosition, goalPosition, originPosition);
                 Move(targetTransform, currentPosition, movement, allowBodyMovement);
@@ -440,9 +447,8 @@ namespace VRMarionette
                 Rotate(targetTransform, rotation);
             }
 
-            protected void UpdateHands(ControlPoint baseControlPoint, Vector3 baseGoalPosition)
+            protected void UpdateHands(Vector3 baseGoalPosition)
             {
-                baseGoalPosition = baseControlPoint.ToBottomPosition(baseGoalPosition);
                 var headYRotation = GetHeadYRotation();
 
                 UpdateHand(
@@ -469,11 +475,11 @@ namespace VRMarionette
                 Quaternion headYRotation
             )
             {
-                if (!IsAboveGoalHeight(hand)) return;
+                if (IsOnBottom(hand)) return;
 
                 UpdateUpperArmRotation(upperArmBone, hand.Transform.parent.parent);
                 UpdateHandPosition(
-                    hand.Transform,
+                    hand,
                     baseGoalPosition,
                     handDirection,
                     headYRotation
@@ -491,7 +497,7 @@ namespace VRMarionette
             }
 
             private void UpdateHandPosition(
-                Transform handTransform,
+                ControlPoint hand,
                 Vector3 targetGoalPosition,
                 Vector3 handDirection,
                 Quaternion yRotation
@@ -502,8 +508,8 @@ namespace VRMarionette
 
                 // Hand を動かすと Hand が回転してしまうため LowerArm を移動する
                 UpdatePosition(
-                    handTransform.parent,
-                    handTransform.position,
+                    hand.Transform.parent,
+                    hand.BottomPosition,
                     handGoalPosition,
                     allowBodyMovement: false
                 );
@@ -537,6 +543,24 @@ namespace VRMarionette
             public abstract void Update();
         }
 
+        private class FreeFall : FallLandingAction
+        {
+            public FreeFall(PostureControlFall instance, Animator animator) : base(instance, animator)
+            {
+            }
+
+            public override void Start()
+            {
+                // TODO 後で消す
+                Debug.Log("Start FreeFall");
+            }
+
+            public override void Update()
+            {
+                if (IsOnGround) Finish();
+            }
+        }
+
         private class FallForwardLandOnHand : FallLandingAction
         {
             public FallForwardLandOnHand(PostureControlFall instance, Animator animator)
@@ -546,14 +570,15 @@ namespace VRMarionette
 
             public override void Start()
             {
+                // TODO 後で消す
+                Debug.Log("Start FallForwardLandOnHand");
                 SetGoal(Head, 1f);
             }
 
             public override void Update()
             {
                 // Head か Head が目標地点の高さに到達していれば終了する
-                if (!IsAboveGoalHeight(Head) ||
-                    (!IsAboveGoalHeight(LeftHand) && !IsAboveGoalHeight(RightHand)))
+                if (IsOnBottom(Head) || (IsOnBottom(LeftHand) && IsOnBottom(RightHand)))
                 {
                     Finish();
                     return;
@@ -562,14 +587,14 @@ namespace VRMarionette
                 // 首は曲げずに Head の位置を変えるために UpperChest を移動する
                 UpdatePosition(
                     Head.Transform.parent.parent,
-                    Head.Transform.position,
+                    Head.BottomPosition,
                     BaseGoalPosition,
                     OriginPosition,
                     allowBodyMovement: true
                 );
 
                 UpdateHipsRotation();
-                UpdateHands(Head, BaseGoalPosition);
+                UpdateHands(BaseGoalPosition);
                 UpdateFeetPosition();
 
                 Tick();
@@ -631,6 +656,8 @@ namespace VRMarionette
 
             public override void Start()
             {
+                // TODO 後で消す
+                Debug.Log("Start FallBackwardLandOnHips");
                 SetGoal(Hips, 0.5f);
             }
 
@@ -639,7 +666,7 @@ namespace VRMarionette
                 var hipsPosition = Hips.Transform.position;
 
                 // Hips が目標地点の高さに到達したら終了する
-                if (!IsAboveGoalHeight(Hips))
+                if (IsOnBottom(Hips))
                 {
                     Finish();
                     return;
@@ -647,13 +674,13 @@ namespace VRMarionette
 
                 UpdatePosition(
                     Hips.Transform,
-                    hipsPosition,
+                    Hips.BottomPosition,
                     BaseGoalPosition,
                     OriginPosition,
                     allowBodyMovement: true
                 );
 
-                UpdateHands(Head, BaseGoalPosition);
+                UpdateHands(BaseGoalPosition);
 
                 var centroidPosition = CentroidPosition;
                 UpdateFootPosition(LeftFoot, hipsPosition, centroidPosition);
@@ -668,8 +695,6 @@ namespace VRMarionette
                 Vector3 centroidPosition
             )
             {
-                if (!IsAboveGoalHeight(foot)) return;
-
                 var footPosition = foot.Transform.position;
 
                 // XZ 平面における Hips から Foot への方向を求める
@@ -681,12 +706,12 @@ namespace VRMarionette
                 var toCentroid = (centroidPosition - hipsPosition).ProjectOnto(toFootDirection);
                 var distance = UpperLegLength + LowerLegLength;
                 var footGoalPosition = hipsPosition + distance * toFootDirection - toCentroid;
-                footGoalPosition.y = GroundPosition.y;
+                footGoalPosition.y = BottomPosition.y;
 
                 // Foot は動かさずに Foot の位置を変えるために UpperLeg を移動する
                 UpdatePosition(
                     foot.Transform.parent,
-                    footPosition,
+                    foot.BottomPosition,
                     footGoalPosition,
                     allowBodyMovement: false
                 );
@@ -705,18 +730,20 @@ namespace VRMarionette
 
             public override void Start()
             {
+                // TODO 後で消す
+                Debug.Log("Start FallAndLandOnFoot");
                 // 接地していない Foot のうち低い方の Foot を Base Foot とする
                 var isRightFootLowerThanLeftFoot = RightFoot.Transform.position.y < LeftFoot.Transform.position.y;
 
                 if (isRightFootLowerThanLeftFoot)
                 {
-                    if (!IsOnGround(RightFoot)) _baseFoot = RightFoot;
-                    if (!IsOnGround(LeftFoot)) _otherFoot = LeftFoot;
+                    if (!IsOnBottom(RightFoot)) _baseFoot = RightFoot;
+                    if (!IsOnBottom(LeftFoot)) _otherFoot = LeftFoot;
                 }
                 else
                 {
-                    if (!IsOnGround(LeftFoot)) _baseFoot = LeftFoot;
-                    if (!IsOnGround(RightFoot)) _otherFoot = RightFoot;
+                    if (!IsOnBottom(LeftFoot)) _baseFoot = LeftFoot;
+                    if (!IsOnBottom(RightFoot)) _otherFoot = RightFoot;
                 }
 
                 if (_baseFoot is null)
@@ -730,7 +757,7 @@ namespace VRMarionette
 
             public override void Update()
             {
-                if (!IsAboveGoalHeight(_baseFoot))
+                if (IsOnBottom(_baseFoot))
                 {
                     Finish();
                     return;
@@ -738,7 +765,7 @@ namespace VRMarionette
 
                 UpdatePosition(
                     _baseFoot.Transform.parent,
-                    _baseFoot.Transform.position,
+                    _baseFoot.BottomPosition,
                     BaseGoalPosition,
                     OriginPosition,
                     allowBodyMovement: false
@@ -748,7 +775,7 @@ namespace VRMarionette
                 {
                     UpdatePosition(
                         _otherFoot.Transform.parent,
-                        _otherFoot.Transform.position,
+                        _otherFoot.BottomPosition,
                         BaseGoalPosition,
                         OriginPosition,
                         allowBodyMovement: false
@@ -757,14 +784,10 @@ namespace VRMarionette
 
                 UpdateHipsRotation();
 
-                if (_baseFoot.BottomPosition.y < Head.BottomPosition.y)
-                {
-                    UpdateHands(_baseFoot, BaseGoalPosition);
-                }
-                else
-                {
-                    UpdateHands(Head, Head.Transform.position);
-                }
+                UpdateHands(_baseFoot.BottomPosition.y < Head.BottomPosition.y
+                    ? BaseGoalPosition
+                    : Head.BottomPosition
+                );
 
                 Tick();
             }

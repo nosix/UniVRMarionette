@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace VRMarionette
@@ -146,6 +147,8 @@ namespace VRMarionette
         {
             public IReadOnlyDictionary<HumanBodyBones, Ratio> Ratios { get; }
 
+            private Dictionary<HumanBodyBones, IReadOnlyDictionary<HumanBodyBones, Ratio>> _cachedRatios = new();
+
             public BoneGroupSpec(HumanLimits humanLimits, params HumanBodyBones[] bones)
             {
                 // Group に含まれる全骨の合計角度(可動範囲)を求める
@@ -180,6 +183,19 @@ namespace VRMarionette
                 Ratios = tmpRatios;
             }
 
+            public IReadOnlyDictionary<HumanBodyBones, Ratio> GetRatiosBasedOn(HumanBodyBones bone)
+            {
+                if (_cachedRatios.TryGetValue(bone, out var cache)) return cache;
+
+                var baseRatio = Ratios[bone];
+                var ratios = Ratios.ToDictionary(
+                    pair => pair.Key,
+                    pair => pair.Value / baseRatio
+                );
+                _cachedRatios.Add(bone, ratios);
+                return ratios;
+            }
+
             private static float ToRatio(float value, float total)
             {
                 return Mathf.Approximately(total, 0f) ? 0f : value / total;
@@ -211,6 +227,22 @@ namespace VRMarionette
                 if (angle.z > Mathf.Epsilon) z = angle.z * Max.z;
 
                 return new Vector3(x, y, z);
+            }
+
+            public static Ratio operator /(Ratio l, Ratio r)
+            {
+                return new Ratio(
+                    new Vector3(
+                        l.Min.x / r.Min.x,
+                        l.Min.y / r.Min.y,
+                        l.Min.z / r.Min.z
+                    ),
+                    new Vector3(
+                        l.Max.x / r.Max.x,
+                        l.Max.y / r.Max.y,
+                        l.Max.z / r.Max.z
+                    )
+                );
             }
         }
     }

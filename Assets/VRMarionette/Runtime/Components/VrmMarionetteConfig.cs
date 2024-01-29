@@ -25,10 +25,10 @@ namespace VRMarionette
         [Tooltip(
             "If the distance between the center of gravity and the ground contact point is within this value range, " +
             "the body will stand upright.")]
-        public Vector3 uprightThresholdDistance = new(0.2f, 1f, 0.3f);
+        public Vector3 uprightThresholdDistance = new(0.2f, 1f, 0.2f);
 
         public Transform centroid;
-        public Transform ground;
+        public Transform bottom;
 
         [Header("PostureControl")] [Space]
         public PostureControlType postureControl = PostureControlType.Fall;
@@ -65,7 +65,7 @@ namespace VRMarionette
             vrmRigidbody.nearDistance = nearDistance;
             vrmRigidbody.uprightThresholdDistance = uprightThresholdDistance;
             vrmRigidbody.centroid = centroid;
-            vrmRigidbody.ground = ground;
+            vrmRigidbody.bottom = bottom;
         }
 
         private void SetupPostureControl(GameObject instance)

@@ -30,8 +30,8 @@ MonoBehaviour:
   - bone: 3
     weight: 0.2
   - bone: 5
-    weight: 0.2
+    weight: 0.1
   - bone: 4
     weight: 0.2
   - bone: 6
-    weight: 0.2
+    weight: 0.1

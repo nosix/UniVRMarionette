@@ -1,11 +1,12 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
 namespace VRMarionette
 {
-    public class BoneProperties
+    public class BoneProperties : IEnumerable<BoneProperty>
     {
         private readonly IReadOnlyDictionary<Transform, BoneProperty> _properties;
 
@@ -45,6 +46,16 @@ namespace VRMarionette
             {
                 return new BoneProperties(_properties);
             }
+        }
+
+        public IEnumerator<BoneProperty> GetEnumerator()
+        {
+            return _properties.Values.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }

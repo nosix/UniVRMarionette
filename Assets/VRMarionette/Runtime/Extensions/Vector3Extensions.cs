@@ -140,5 +140,20 @@ namespace VRMarionette
         {
             return Mathf.Sqrt(v.x * v.x + v.y * v.y);
         }
+
+        public static Vector3 AlignWithForwardDirection(this Vector3 v, Quaternion rotation)
+        {
+            // 前方向と上方向のベクトルがつくる平面上で Y=0 となるベクトルを身体の向きとする
+            // v = a * v1 + b * v2 であり Y=0 なので
+            // v_y = a * v1_y + b * v2_y = 0 である
+            // a,b は無数に存在するので a=1 とすると b = - v1_y / v2_y
+            // よって、v = v1 - v1_y / v2_y * v2
+            var v1 = rotation * Vector3.forward;
+            var v2 = rotation * Vector3.up;
+            var bodyDirection = v1 - v1.y / v2.y * v2;
+            var yRotationAngle = Vector3.SignedAngle(Vector3.forward, bodyDirection, Vector3.up);
+
+            return Quaternion.Euler(0, -yRotationAngle, 0) * v;
+        }
     }
 }

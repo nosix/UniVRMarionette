@@ -28,16 +28,20 @@ namespace VRMarionette
             _properties = properties;
         }
 
-        public Vector3 ToBottomPosition(Vector3 position)
+        public Vector3 GetBottomPosition()
         {
-            position.y -= Collider.radius;
-            return position;
-        }
-
-        public Vector3 ToPosition(Vector3 bottomPosition)
-        {
-            bottomPosition.y += Collider.radius;
-            return bottomPosition;
+            if (!HasCollider) return Transform.position;
+            var length = Collider.height - 2f * Collider.radius;
+            var halfLength = length > 0 ? length / 2f : 0f;
+            var axisDirection = Collider.direction.ToDirection().ToAxis();
+            var centerOffset = Collider.center;
+            var localP1 = centerOffset + halfLength * axisDirection;
+            var localP2 = centerOffset - halfLength * axisDirection;
+            var p1 = Transform.TransformPoint(localP1);
+            var p2 = Transform.TransformPoint(localP2);
+            var p = p1.y < p2.y ? p1 : p2;
+            p.y -= Collider.radius;
+            return p;
         }
 
         /// <summary>

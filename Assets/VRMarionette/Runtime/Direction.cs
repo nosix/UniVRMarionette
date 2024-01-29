@@ -22,5 +22,10 @@ namespace VRMarionette
                 _ => throw new ArgumentOutOfRangeException(nameof(direction), direction, null)
             };
         }
+
+        public static Direction ToDirection(this int value)
+        {
+            return (Direction)value;
+        }
     }
 }

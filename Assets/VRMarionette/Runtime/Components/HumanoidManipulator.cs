@@ -55,14 +55,15 @@ namespace VRMarionette
         /// </summary>
         /// <param name="bone">回転対象の骨</param>
         /// <param name="angle">角度</param>
+        /// <param name="isBoneAngle">骨グループ全体の角度ではなく骨単体の角度を指定するならば true</param>
         /// <exception cref="ArgumentOutOfRangeException">存在しない骨を指定した</exception>
         /// <returns>回転した角度</returns>
-        public Vector3 SetBoneRotation(HumanBodyBones bone, Vector3 angle)
+        public Vector3 SetBoneRotation(HumanBodyBones bone, Vector3 angle, bool isBoneAngle = false)
         {
             return GetBoneCategory(bone, out var groupId) switch
             {
                 BoneCategory.Independent => SetLocalEulerAngle(bone, angle),
-                BoneCategory.Grouped => SetBoneGroupRotation(groupId, angle),
+                BoneCategory.Grouped => SetBoneGroupRotation(groupId, angle, isBoneAngle ? bone : null),
                 BoneCategory.NotSupported => Vector3.zero,
                 _ => throw new ArgumentOutOfRangeException()
             };
@@ -239,14 +240,18 @@ namespace VRMarionette
         /// </summary>
         /// <param name="group">複数の骨をまとめたグループ</param>
         /// <param name="angle">設定する回転角度</param>
+        /// <param name="targetBone">angle を骨グループ全体の角度とするならば null、それ以外は targetBone の角度とする</param>
         /// <returns>回転した角度</returns>
-        private Vector3 SetBoneGroupRotation(BoneGroups.Id group, Vector3 angle)
+        private Vector3 SetBoneGroupRotation(BoneGroups.Id group, Vector3 angle, HumanBodyBones? targetBone)
         {
             var groupSpec = _boneGroups.GetSpec(group);
+            var ratios = targetBone.HasValue
+                ? groupSpec.GetRatiosBasedOn(targetBone.Value)
+                : groupSpec.Ratios;
 
             var rotatedAngle = Vector3.zero;
 
-            foreach (var (bone, ratio) in groupSpec.Ratios)
+            foreach (var (bone, ratio) in ratios)
             {
                 rotatedAngle += SetLocalEulerAngle(bone, ratio.Apply(angle));
             }
