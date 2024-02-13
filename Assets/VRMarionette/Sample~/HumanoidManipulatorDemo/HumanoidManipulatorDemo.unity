@@ -159,7 +159,7 @@ MonoBehaviour:
   nearDistance: 0.03
   uprightThresholdDistance: {x: 0.2, y: 1, z: 0.3}
   centroid: {fileID: 0}
-  ground: {fileID: 0}
+  bottom: {fileID: 0}
   postureControl: 1
 --- !u!4 &701956889
 Transform:
