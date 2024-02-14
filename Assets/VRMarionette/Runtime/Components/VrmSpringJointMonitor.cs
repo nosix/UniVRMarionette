@@ -6,10 +6,22 @@ using UniVRM10;
 
 namespace VRMarionette
 {
-    public class VrmSpringBoneColliderMonitor : MonoBehaviour
+    /// <summary>
+    /// Vrm10Instance が設定されている GameObject に設定して SpringJoint の揺れを検出する
+    /// </summary>
+    /// <remarks>
+    /// 使用方法
+    /// <list type="number">
+    /// <item>Vrm10Instance が設定されている GameObject に VrmSpringJointMonitor を追加する</item>
+    /// <item>JointNames プロパティで SpringJoint の名前一覧を取得する</item>
+    /// <item>SetMonitoringJoints メソッドで監視対象の SpringJoint の名前を指定する</item>
+    /// <item>JointRotationAngles プロパティで SprintJoint の回転角度を取得して揺れ度合いを把握する</item>
+    /// </list>
+    /// </remarks>
+    public class VrmSpringJointMonitor : MonoBehaviour
     {
         /// <summary>
-        /// SetMonitoringJoints で指定可能な Joint Name
+        /// SetMonitoringJoints で指定可能な JointName
         /// </summary>
         public IEnumerable<string> JointNames => _springJoints.Keys;
 
