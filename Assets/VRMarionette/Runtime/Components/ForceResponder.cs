@@ -218,14 +218,14 @@ namespace VRMarionette
         /// <param name="forcePoint">力が発生する位置</param>
         /// <param name="force">力の大きさ(移動量)</param>
         /// <param name="allowBodyMovement">回転で消費されなかった力を移動に使うなら true</param>
-        public void QueueForce(
+        public ForceEvent? QueueForce(
             Transform target,
             Vector3 forcePoint,
             Vector3 force,
             bool allowBodyMovement
         )
         {
-            if (!BoneProperties.TryGetValue(target, out var boneProperty)) return;
+            if (!BoneProperties.TryGetValue(target, out var boneProperty)) return null;
             _forceTaskQueue.Enqueue(new SingleForceTask(
                 boneProperty,
                 forcePoint,
@@ -234,6 +234,7 @@ namespace VRMarionette
                 allowMerge: false,
                 allowBodyMovement
             ));
+            return boneProperty.CreateForceEvent(hold: false, forcePoint);
         }
 
         /// <summary>
@@ -246,7 +247,7 @@ namespace VRMarionette
         /// <param name="rotation">回転量</param>
         /// <param name="allowMultiSource">複数の発生源と連動することを許可するなら true</param>
         /// <param name="allowBodyMovement">回転で消費されなかった力を移動に使うなら true</param>
-        public void QueueForce(
+        public ForceEvent? QueueForce(
             Transform target,
             Vector3 forcePoint,
             Vector3 force,
@@ -255,7 +256,7 @@ namespace VRMarionette
             bool allowBodyMovement
         )
         {
-            if (!BoneProperties.TryGetValue(target, out var boneProperty)) return;
+            if (!BoneProperties.TryGetValue(target, out var boneProperty)) return null;
             _forceTaskQueue.Enqueue(new SingleForceTask(
                 boneProperty,
                 forcePoint,
@@ -264,6 +265,7 @@ namespace VRMarionette
                 allowMultiSource,
                 allowBodyMovement
             ));
+            return boneProperty.CreateForceEvent(hold: true, forcePoint);
         }
 
         public void Update()

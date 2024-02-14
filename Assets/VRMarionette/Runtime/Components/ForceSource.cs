@@ -25,6 +25,8 @@ namespace VRMarionette
         [Space]
         public UnityEvent<FocusEvent> onFocus;
 
+        public ForceEvent? ForceEvent { private set; get; }
+
         private SphereCollider _collider;
         private IFocusIndicator _focusIndicator;
         private ForceResponder _forceResponder;
@@ -158,6 +160,8 @@ namespace VRMarionette
         {
             if (!_isInitialized) return;
 
+            ForceEvent = null;
+
             UpdateCapsule();
 
             if (!hold)
@@ -186,7 +190,7 @@ namespace VRMarionette
             var currRotation = t.rotation;
             var force = currPosition - _prevPosition;
             var rotation = currRotation * Quaternion.Inverse(_prevRotation);
-            _forceResponder.QueueForce(
+            ForceEvent = _forceResponder.QueueForce(
                 _holdCollider.transform,
                 _collider.transform.position,
                 force,
@@ -210,7 +214,7 @@ namespace VRMarionette
             force = force.ProjectOnto(forward);
             if (Vector3.Dot(force, forward) < 0) force = Vector3.zero;
 
-            _forceResponder.QueueForce(
+            ForceEvent = _forceResponder.QueueForce(
                 _pushCollider.transform,
                 _collider.transform.position,
                 force,

@@ -44,6 +44,46 @@ namespace VRMarionette
             return p;
         }
 
+        public ForceEvent CreateForceEvent(bool hold, Vector3 forcePoint)
+        {
+            return new ForceEvent
+            {
+                Bone = Bone,
+                Hold = hold,
+                Distance = GetPositionInCollider(forcePoint),
+                AxisDirection = HasCollider ? Collider.direction.ToDirection() : Direction.YAxis
+            };
+        }
+
+        /// <summary>
+        /// Collider 内における位置を得る
+        /// </summary>
+        /// <param name="worldPosition">この点が Collider 内でどの位置にあるかを調べる</param>
+        /// <returns>
+        /// 関節に近い Collider の端を 0f とする。
+        /// 軸方向以外は Collider の境界を 1f もしくは -1f とする。
+        /// 軸方向は関節から遠い Collider の端を 1f とする。
+        /// Collider の境界外の場合は 1f より大きく、-1f より小さい場合もありえる。
+        /// </returns>
+        private Vector3 GetPositionInCollider(Vector3 worldPosition)
+        {
+            if (!HasCollider) return Vector3.zero;
+
+            var localPosition = Transform.InverseTransformPoint(worldPosition);
+            var axis = Collider.direction.ToDirection().ToAxis();
+            var radius = Collider.radius;
+            var center = Collider.center;
+            var halfLength = Mathf.Max(Collider.height / 2f, radius);
+            var sign = Vector3.Dot(axis, center) > 0 ? 1 : -1;
+            localPosition -= center - sign * halfLength * axis;
+            var colliderSize = sign * 2f * halfLength * axis + radius * (Vector3.one - axis);
+            return new Vector3(
+                localPosition.x / colliderSize.x,
+                localPosition.y / colliderSize.y,
+                localPosition.z / colliderSize.z
+            );
+        }
+
         /// <summary>
         /// 骨が連結して回転する場合の根元の骨の関節を探す。
         /// 根元の骨の関節が OriginTransform になり、
