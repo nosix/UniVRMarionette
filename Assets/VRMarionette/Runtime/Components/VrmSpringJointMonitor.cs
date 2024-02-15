@@ -33,7 +33,7 @@ namespace VRMarionette
 
         private IReadOnlyDictionary<string, Transform> _springJoints;
         private readonly List<Transform> _monitoringJoints = new();
-        private readonly List<float> _monitoringJointRotationAngles = new();
+        private float[] _monitoringJointRotationAngles = Array.Empty<float>();
 
         public void Setup(Vrm10Instance instance)
         {
@@ -56,7 +56,7 @@ namespace VRMarionette
                 _monitoringJoints.Add(targetTransform);
             }
 
-            _monitoringJointRotationAngles.Capacity = _monitoringJoints.Count;
+            _monitoringJointRotationAngles = new float[_monitoringJoints.Count];
         }
 
         private void Update()
