@@ -35,12 +35,9 @@ namespace VRMarionette
         private readonly List<Transform> _monitoringJoints = new();
         private readonly List<float> _monitoringJointRotationAngles = new();
 
-        private void Start()
+        public void Setup(Vrm10Instance instance)
         {
-            var vrmInstance = GetComponent<Vrm10Instance>() ?? throw new InvalidOperationException(
-                "The VrmSpringBoneColliderMonitor requires the Vrm10Instance component.");
-
-            _springJoints = vrmInstance.SpringBone.Springs
+            _springJoints = instance.SpringBone.Springs
                 .SelectMany(s => s.Joints)
                 .ToDictionary(
                     e => e.name,
