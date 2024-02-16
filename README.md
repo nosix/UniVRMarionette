@@ -44,7 +44,7 @@ Components
    - hold が true の場合は摘まみ操作、false の場合は押し操作になる
    - useRemainingForceForMovement を true にすると関節の回転に適用されなかった力を移動に使用する
    - GameObject に IFocusIndicator を実装した Component が設定されている場合、
-     OnTriggerEnter が発生した時にその Component に focusColor を設定する 
+     OnTriggerEnter が発生した時にその Component にフォーカスを設定する 
 - GravityApplier
    - モデルの重心を計算して重力の影響を処理する機能を提供する
    - 接地している位置と重心の位置が uprightThresholdDistance を超える場合は姿勢を崩す
@@ -72,7 +72,7 @@ Interface
 
 - IFocusIndicator
    - ForceSource が設定された GameObject に IFocusIndicator を実装した Component を設定すると、
-     Collider が接触した際に FocusIndicator に色が設定される
+     Collider が接触した際に活性化する
 
 ### MetaXR : `com.github.nosix.vrm.meta.xr`
 
@@ -84,7 +84,8 @@ Prefab
 - VrmMarionetteHand
    - 揺れ物と干渉する SpringBoneCollider や回転や移動のトリガーとなる ForceSource を持つ
    - Hand に OVRHand を設定すると Hand Tracking が有効になる 
-      - OVRSkeleton の位置と回転を追跡して、中指の付け根(Palm)、親指の先(Thumb)、人差指の先(Index)、小指の先(Ring)に設定された SpringBoneCollider を動かす
+      - OVRSkeleton の位置を追跡して、
+        手の根元(Root)、中指の付け根(Palm)、親指の先(Thumb)、人差指の先(Index)、薬指の先(Ring)に設定された SpringBoneCollider を動かす
       - 親指の先と人差指の先が grabThresholdDistance より近付いた場合に摘まみ状態にする
       - 状態が変わった時に onGrab を呼び出す (摘まみ状態ならば true を引数に渡す)
    - Controller に OVRControllerHelper を設定すると Controller Tracking が有効になる
@@ -107,7 +108,7 @@ Prefab
 - Capsule
   - CapsuleCollider の形を可視化するための GameObject
   - 標準の Capsule とは異なり CapsuleCollider と同様に Center, Radius, Height, Direction の設定を持つ
-  - 色を設定すると一定時間でアニメーションしながら透明になる
+  - Activate を true で実行するとアニメーションしながら一定時間で透明になる
      - 時間は Duration で秒数を指定する
      - Duration が 0 の場合は透明にしない
 
@@ -221,22 +222,20 @@ Prefab
        
        public Transform Transform => capsule.transform;
        
-       public Color Color
-       {
-           set => capsule.Color = value;
-       }
-       
        public void SetCapsule(CapsuleCollider capsuleCollider)
        {
            capsule.SetCapsule(capsuleCollider);
+       }
+   
+       public void Activate(bool activate)
+       {
+           capsule.Activate(activate);
        }
    }
    ```
 4. Scene を編集する
    1. Packages/VRMarionette Util/Runtime/Capsule prefab を 2 つ追加する
       - それぞれ Left, Right 用
-      - Color の alpha を 0 にして非表示にする
-        (Capsule の Color はデフォルト色であり、実行中に設定される色は VrmMarionetteHand で指定する)
       - Duration を 1 にして表示時間を 1 秒にする
       - 以降 FocusIndicator と呼ぶ
    2. VrmMarionetteHand の Palm に FocusIndicator Script を追加する
