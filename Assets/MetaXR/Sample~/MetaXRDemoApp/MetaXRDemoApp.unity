@@ -7226,7 +7226,7 @@ MonoBehaviour:
   nearDistance: 0.03
   uprightThresholdDistance: {x: 0.2, y: 1, z: 0.3}
   centroid: {fileID: 0}
-  ground: {fileID: 0}
+  bottom: {fileID: 0}
   postureControl: 1
 --- !u!1 &1267930829
 GameObject:
@@ -11267,6 +11267,16 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1499858064292976180, guid: 6d23ff9771f224988a128295d935b05e,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2125084213667105283, guid: 6d23ff9771f224988a128295d935b05e,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5678366907379405494, guid: 6d23ff9771f224988a128295d935b05e,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -11315,6 +11325,11 @@ PrefabInstance:
     - target: {fileID: 5678366907379405494, guid: 6d23ff9771f224988a128295d935b05e,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5962058514293499588, guid: 6d23ff9771f224988a128295d935b05e,
+        type: 3}
+      propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6450994943108389471, guid: 6d23ff9771f224988a128295d935b05e,
@@ -11366,6 +11381,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: LeftVrmMarionetteHand
+      objectReference: {fileID: 0}
+    - target: {fileID: 8403208956765613195, guid: 6d23ff9771f224988a128295d935b05e,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8812993957905038661, guid: 6d23ff9771f224988a128295d935b05e,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -11929,6 +11954,16 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1499858064292976180, guid: 6d23ff9771f224988a128295d935b05e,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2125084213667105283, guid: 6d23ff9771f224988a128295d935b05e,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5678366907379405494, guid: 6d23ff9771f224988a128295d935b05e,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -11977,6 +12012,11 @@ PrefabInstance:
     - target: {fileID: 5678366907379405494, guid: 6d23ff9771f224988a128295d935b05e,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5962058514293499588, guid: 6d23ff9771f224988a128295d935b05e,
+        type: 3}
+      propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6450994943108389471, guid: 6d23ff9771f224988a128295d935b05e,
@@ -12033,6 +12073,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: RightVrmMarionetteHand
+      objectReference: {fileID: 0}
+    - target: {fileID: 8403208956765613195, guid: 6d23ff9771f224988a128295d935b05e,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8812993957905038661, guid: 6d23ff9771f224988a128295d935b05e,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

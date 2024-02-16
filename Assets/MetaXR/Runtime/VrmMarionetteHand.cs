@@ -14,8 +14,9 @@ namespace VRMarionette.MetaXR
 
         [Header("Spring Bone Colliders")]
         [Space]
-        public VRM10SpringBoneCollider palm;
+        public VRM10SpringBoneCollider root;
 
+        public VRM10SpringBoneCollider palm;
         public VRM10SpringBoneCollider thumb;
         public VRM10SpringBoneCollider index;
         public VRM10SpringBoneCollider ring;
@@ -27,11 +28,13 @@ namespace VRMarionette.MetaXR
 
         private Transform _srcControllerTransform;
 
+        private Transform _srcRootTransform;
         private Transform _srcPalmTransform;
         private Transform _srcThumbTransform;
         private Transform _srcIndexTransform;
         private Transform _srcRingTransform;
 
+        private Transform _dstRootTransform;
         private Transform _dstPalmTransform;
         private Transform _dstThumbTransform;
         private Transform _dstIndexTransform;
@@ -44,6 +47,7 @@ namespace VRMarionette.MetaXR
 
         private IEnumerator Start()
         {
+            _dstRootTransform = root.transform;
             _dstPalmTransform = palm.transform;
             _dstThumbTransform = thumb.transform;
             _dstIndexTransform = index.transform;
@@ -64,6 +68,9 @@ namespace VRMarionette.MetaXR
             {
                 switch (bone.Id)
                 {
+                    case OVRSkeleton.BoneId.Hand_WristRoot:
+                        _srcRootTransform = bone.Transform;
+                        break;
                     case OVRSkeleton.BoneId.Hand_Middle1:
                         _srcPalmTransform = bone.Transform;
                         break;
@@ -86,6 +93,7 @@ namespace VRMarionette.MetaXR
             if (_isHandTracking && !IsTracked)
             {
                 _isHandTracking = false;
+                _dstRootTransform.gameObject.SetActive(false);
                 _dstThumbTransform.gameObject.SetActive(false);
                 _dstIndexTransform.gameObject.SetActive(false);
                 _dstRingTransform.gameObject.SetActive(false);
@@ -95,6 +103,7 @@ namespace VRMarionette.MetaXR
             if (!_isHandTracking && IsTracked)
             {
                 _isHandTracking = true;
+                _dstRootTransform.gameObject.SetActive(true);
                 _dstThumbTransform.gameObject.SetActive(true);
                 _dstIndexTransform.gameObject.SetActive(true);
                 _dstRingTransform.gameObject.SetActive(true);
@@ -143,17 +152,11 @@ namespace VRMarionette.MetaXR
             };
             _dstPalmTransform.Rotate(xAngle, 0f, 0f);
 
-            // 親指の位置と向きを同期する
+            // 位置を同期する
+            _dstRootTransform.position = _srcRootTransform.position;
             _dstThumbTransform.position = _srcThumbTransform.position;
-            _dstThumbTransform.rotation = _srcThumbTransform.rotation;
-
-            // 人差し指の位置と向きを同期する
             _dstIndexTransform.position = _srcIndexTransform.position;
-            _dstIndexTransform.rotation = _srcIndexTransform.rotation;
-
-            // 薬指の位置と向きを同期する
             _dstRingTransform.position = _srcRingTransform.position;
-            _dstRingTransform.rotation = _srcRingTransform.rotation;
 
             var thumbIndexDistance = Vector3.Distance(_dstThumbTransform.position, _dstIndexTransform.position);
             var isGrabbing = thumbIndexDistance < grabThresholdDistance;
