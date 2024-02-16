@@ -7,7 +7,7 @@ namespace VRMarionette
     /// <summary>
     /// 力の発生源。
     /// IFocusIndicator を実装した Component が存在する場合、
-    /// 力を及ぼす対象の CapsuleCollider と接触した時に CapsuleCollider の形状と focusColor を IFocusIndicator に通知する。
+    /// 力を及ぼす対象の CapsuleCollider と接触した時に CapsuleCollider の形状を IFocusIndicator に通知する。
     /// </summary>
     [RequireComponent(typeof(SphereCollider))]
     public class ForceSource : MonoBehaviour
@@ -18,9 +18,6 @@ namespace VRMarionette
         public bool useRemainingForceForMovement;
 
         public bool trace;
-
-        [Space]
-        public Color focusColor = Color.yellow;
 
         [Space]
         public UnityEvent<FocusEvent> onFocus;
@@ -108,7 +105,7 @@ namespace VRMarionette
             // 身体部位に設定した CapsuleCollider 以外の場合は無視する
             if (!_forceResponder.BoneProperties.TryGetValue(capsule.transform, out var nextBoneProperty)) return;
 
-            var nextFocusColor = Color.clear;
+            var activate = false;
 
             if (_targetCapsule is not null)
             {
@@ -136,13 +133,13 @@ namespace VRMarionette
                     Bone = nextBoneProperty.Bone,
                     On = true
                 });
-                nextFocusColor = focusColor;
+                activate = true;
             }
 
             if (_focusIndicator is null) return;
 
             _focusIndicator.SetCapsule(capsule);
-            _focusIndicator.Color = nextFocusColor;
+            _focusIndicator.Activate(activate);
         }
 
         private void UpdateCapsule()

@@ -37,7 +37,7 @@ namespace VRMarionette.Util.Editor
             dstTransform.rotation = srcTransform.rotation;
             dstTransform.localScale = srcTransform.localScale;
 
-            capsule.Color = Color.yellow;
+            capsule.Activate(true);
         }
     }
 }

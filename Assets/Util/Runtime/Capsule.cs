@@ -22,15 +22,6 @@ namespace VRMarionette.Util
 
         public float duration;
 
-        public Color Color
-        {
-            set
-            {
-                color = value;
-                OnColorChanged();
-            }
-        }
-
         private bool _initialized;
         private bool _useSharedMaterial;
 
@@ -43,6 +34,7 @@ namespace VRMarionette.Util
         private Renderer _sphereTopRenderer;
         private Renderer _sphereBottomRenderer;
 
+        private Color _currentColor;
         private float _deltaAlpha;
 
         private static readonly int BaseColor = Shader.PropertyToID("_BaseColor");
@@ -118,22 +110,22 @@ namespace VRMarionette.Util
             UpdateMaterialColor();
 
             if (duration < Mathf.Epsilon) return;
-            _deltaAlpha = color.a / duration;
+            _deltaAlpha = _currentColor.a / duration;
         }
 
         private void UpdateMaterialColor()
         {
             if (_useSharedMaterial)
             {
-                _cylinderRenderer.sharedMaterial.SetColor(BaseColor, color);
-                _sphereTopRenderer.sharedMaterial.SetColor(BaseColor, color);
-                _sphereBottomRenderer.sharedMaterial.SetColor(BaseColor, color);
+                _cylinderRenderer.sharedMaterial.SetColor(BaseColor, _currentColor);
+                _sphereTopRenderer.sharedMaterial.SetColor(BaseColor, _currentColor);
+                _sphereBottomRenderer.sharedMaterial.SetColor(BaseColor, _currentColor);
             }
             else
             {
-                _cylinderRenderer.material.SetColor(BaseColor, color);
-                _sphereTopRenderer.material.SetColor(BaseColor, color);
-                _sphereBottomRenderer.material.SetColor(BaseColor, color);
+                _cylinderRenderer.material.SetColor(BaseColor, _currentColor);
+                _sphereTopRenderer.material.SetColor(BaseColor, _currentColor);
+                _sphereBottomRenderer.material.SetColor(BaseColor, _currentColor);
             }
         }
 
@@ -141,8 +133,8 @@ namespace VRMarionette.Util
         {
             if (_deltaAlpha < Mathf.Epsilon) return;
             var da = _deltaAlpha * Time.deltaTime;
-            color.a = color.a > da ? color.a - da : 0f;
-            if (color.a == 0f) _deltaAlpha = 0f;
+            _currentColor.a = _currentColor.a > da ? _currentColor.a - da : 0f;
+            if (_currentColor.a == 0f) _deltaAlpha = 0f;
             UpdateMaterialColor();
         }
 
@@ -153,6 +145,12 @@ namespace VRMarionette.Util
             height = capsuleCollider.height;
             direction = (Direction)capsuleCollider.direction;
             OnCapsuleChanged();
+        }
+
+        public void Activate(bool activate)
+        {
+            _currentColor = activate ? color : Color.clear;
+            OnColorChanged();
         }
 
         public void OnValidate()

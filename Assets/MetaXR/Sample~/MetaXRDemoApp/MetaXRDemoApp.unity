@@ -6069,7 +6069,12 @@ PrefabInstance:
     - target: {fileID: 5806695016566732851, guid: d5c5a3e0bcd304533a75f9697aa03c5b,
         type: 3}
       propertyPath: color.a
-      value: 0
+      value: 0.49803922
+      objectReference: {fileID: 0}
+    - target: {fileID: 5806695016566732851, guid: d5c5a3e0bcd304533a75f9697aa03c5b,
+        type: 3}
+      propertyPath: color.g
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5806695016566732851, guid: d5c5a3e0bcd304533a75f9697aa03c5b,
         type: 3}
@@ -6308,7 +6313,12 @@ PrefabInstance:
     - target: {fileID: 5806695016566732851, guid: d5c5a3e0bcd304533a75f9697aa03c5b,
         type: 3}
       propertyPath: color.a
-      value: 0
+      value: 0.49803922
+      objectReference: {fileID: 0}
+    - target: {fileID: 5806695016566732851, guid: d5c5a3e0bcd304533a75f9697aa03c5b,
+        type: 3}
+      propertyPath: color.g
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5806695016566732851, guid: d5c5a3e0bcd304533a75f9697aa03c5b,
         type: 3}

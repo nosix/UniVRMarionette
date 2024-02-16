@@ -280,7 +280,6 @@ MonoBehaviour:
   hold: 0
   useRemainingForceForMovement: 0
   trace: 0
-  focusColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 0.49803922}
   onFocus:
     m_PersistentCalls:
       m_Calls: []
@@ -938,6 +937,11 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5806695016566732851, guid: d5c5a3e0bcd304533a75f9697aa03c5b,
+        type: 3}
+      propertyPath: color.g
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7541640240801491394, guid: d5c5a3e0bcd304533a75f9697aa03c5b,
         type: 3}
       propertyPath: m_Name
@@ -1239,7 +1243,7 @@ MonoBehaviour:
   nearDistance: 0.03
   uprightThresholdDistance: {x: 0.2, y: 1, z: 0.3}
   centroid: {fileID: 0}
-  ground: {fileID: 0}
+  bottom: {fileID: 0}
   postureControl: 1
 --- !u!4 &1736832900
 Transform:

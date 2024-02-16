@@ -10,14 +10,14 @@ namespace MetaXR_Sample.MetaXRDemoApp
 
         public Transform Transform => capsule.transform;
 
-        public Color Color
-        {
-            set => capsule.Color = value;
-        }
-
         public void SetCapsule(CapsuleCollider capsuleCollider)
         {
             capsule.SetCapsule(capsuleCollider);
+        }
+
+        public void Activate(bool activate)
+        {
+            capsule.Activate(activate);
         }
     }
 }
