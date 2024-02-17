@@ -45,6 +45,43 @@ namespace VRMarionette.MetaXR
 
         private bool IsTracked => hand is not null && hand.IsTracked;
 
+        private HandType SkeletonType
+        {
+            get
+            {
+                if (_skeleton is null) return HandType.Unknown;
+                return _skeleton.GetSkeletonType() switch
+                {
+                    OVRSkeleton.SkeletonType.HandLeft => HandType.Left,
+                    OVRSkeleton.SkeletonType.HandRight => HandType.Right,
+                    _ => HandType.Unknown
+                };
+            }
+        }
+
+        private HandType ControllerType
+        {
+            get
+            {
+                if (controller is null) return HandType.Unknown;
+                return controller.m_controller switch
+                {
+                    OVRInput.Controller.LTouch or OVRInput.Controller.LHand => HandType.Left,
+                    OVRInput.Controller.RTouch or OVRInput.Controller.RHand => HandType.Right,
+                    _ => HandType.Unknown
+                };
+            }
+        }
+
+        public HandType Type
+        {
+            get
+            {
+                var skeletonType = SkeletonType;
+                return skeletonType != HandType.Unknown ? skeletonType : ControllerType;
+            }
+        }
+
         private IEnumerator Start()
         {
             _dstRootTransform = root.transform;
@@ -120,10 +157,10 @@ namespace VRMarionette.MetaXR
             _dstPalmTransform.position = _srcControllerTransform.position;
             _dstPalmTransform.rotation = _srcControllerTransform.rotation;
 
-            var yAngle = controller.m_controller switch
+            var yAngle = ControllerType switch
             {
-                OVRInput.Controller.LTouch or OVRInput.Controller.LHand => 90f,
-                OVRInput.Controller.RTouch or OVRInput.Controller.RHand => -90f,
+                HandType.Left => 90f,
+                HandType.Right => -90f,
                 _ => 0f
             };
             _dstPalmTransform.Rotate(0f, yAngle, 0f);
@@ -144,10 +181,10 @@ namespace VRMarionette.MetaXR
             _dstPalmTransform.position = _srcPalmTransform.position;
             _dstPalmTransform.rotation = _srcPalmTransform.rotation;
 
-            var xAngle = _skeleton.GetSkeletonType() switch
+            var xAngle = SkeletonType switch
             {
-                OVRSkeleton.SkeletonType.HandLeft => -90f,
-                OVRSkeleton.SkeletonType.HandRight => 90f,
+                HandType.Left => -90f,
+                HandType.Right => 90f,
                 _ => 0f
             };
             _dstPalmTransform.Rotate(xAngle, 0f, 0f);
@@ -170,6 +207,13 @@ namespace VRMarionette.MetaXR
             if (on == _isGrabbing) return;
             _isGrabbing = on;
             onGrab.Invoke(_isGrabbing);
+        }
+
+        public enum HandType
+        {
+            Left,
+            Right,
+            Unknown
         }
     }
 }
