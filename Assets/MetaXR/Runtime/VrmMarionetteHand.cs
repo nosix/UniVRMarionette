@@ -14,17 +14,27 @@ namespace VRMarionette.MetaXR
 
         [Header("Spring Bone Colliders")]
         [Space]
-        public VRM10SpringBoneCollider root;
+        [SerializeField]
+        private VRM10SpringBoneCollider root;
 
-        public VRM10SpringBoneCollider palm;
-        public VRM10SpringBoneCollider thumb;
-        public VRM10SpringBoneCollider index;
-        public VRM10SpringBoneCollider ring;
+        [SerializeField]
+        private VRM10SpringBoneCollider palm;
+
+        [SerializeField]
+        private VRM10SpringBoneCollider thumb;
+
+        [SerializeField]
+        private VRM10SpringBoneCollider index;
+
+        [SerializeField]
+        private VRM10SpringBoneCollider ring;
 
         [Space]
         public UnityEvent<bool> onGrab;
 
-        private OVRSkeleton _skeleton;
+        public OVRSkeleton Skeleton { private set; get; }
+        public bool IsHandTracking { private set; get; }
+        public bool IsGrabbing { private set; get; }
 
         private Transform _srcControllerTransform;
 
@@ -40,17 +50,14 @@ namespace VRMarionette.MetaXR
         private Transform _dstIndexTransform;
         private Transform _dstRingTransform;
 
-        private bool _isHandTracking;
-        private bool _isGrabbing;
-
         private bool IsTracked => hand is not null && hand.IsTracked;
 
         private HandType SkeletonType
         {
             get
             {
-                if (_skeleton is null) return HandType.Unknown;
-                return _skeleton.GetSkeletonType() switch
+                if (Skeleton is null) return HandType.Unknown;
+                return Skeleton.GetSkeletonType() switch
                 {
                     OVRSkeleton.SkeletonType.HandLeft => HandType.Left,
                     OVRSkeleton.SkeletonType.HandRight => HandType.Right,
@@ -96,12 +103,12 @@ namespace VRMarionette.MetaXR
             }
 
             if (hand is null) yield break;
-            _skeleton = hand.GetComponent<OVRSkeleton>();
-            if (_skeleton is null) yield break;
+            Skeleton = hand.GetComponent<OVRSkeleton>();
+            if (Skeleton is null) yield break;
 
-            while (!_skeleton.IsInitialized) yield return null; // 1フレーム待つ
+            while (!Skeleton.IsInitialized) yield return null; // 1フレーム待つ
 
-            foreach (var bone in _skeleton.Bones)
+            foreach (var bone in Skeleton.Bones)
             {
                 switch (bone.Id)
                 {
@@ -127,9 +134,10 @@ namespace VRMarionette.MetaXR
         private void Update()
         {
             // Controller に切り替える
-            if (_isHandTracking && !IsTracked)
+            if (IsHandTracking && !IsTracked)
             {
-                _isHandTracking = false;
+                IsHandTracking = false;
+                // Controller では Palm だけを有効にする
                 _dstRootTransform.gameObject.SetActive(false);
                 _dstThumbTransform.gameObject.SetActive(false);
                 _dstIndexTransform.gameObject.SetActive(false);
@@ -137,16 +145,16 @@ namespace VRMarionette.MetaXR
             }
 
             // Hand Tracking に切り替える
-            if (!_isHandTracking && IsTracked)
+            if (!IsHandTracking && IsTracked)
             {
-                _isHandTracking = true;
+                IsHandTracking = true;
                 _dstRootTransform.gameObject.SetActive(true);
                 _dstThumbTransform.gameObject.SetActive(true);
                 _dstIndexTransform.gameObject.SetActive(true);
                 _dstRingTransform.gameObject.SetActive(true);
             }
 
-            if (_isHandTracking) SyncSkeleton();
+            if (IsHandTracking) SyncSkeleton();
             else SyncController();
         }
 
@@ -154,7 +162,12 @@ namespace VRMarionette.MetaXR
         {
             if (controller is null) return;
 
-            _dstPalmTransform.position = _srcControllerTransform.position;
+            var srcPalmPosition = _srcControllerTransform.position;
+            var dstHandTransform = transform;
+            dstHandTransform.position = srcPalmPosition;
+            dstHandTransform.rotation = controller.transform.rotation;
+
+            _dstPalmTransform.position = srcPalmPosition;
             _dstPalmTransform.rotation = _srcControllerTransform.rotation;
 
             var yAngle = ControllerType switch
@@ -168,17 +181,17 @@ namespace VRMarionette.MetaXR
 
         private void SyncSkeleton()
         {
-            if (_skeleton is null || !_skeleton.IsDataValid) return;
+            if (Skeleton is null || !Skeleton.IsDataValid) return;
 
             // 手の位置と向きを同期する
+            var srcPalmPosition = _srcPalmTransform.position;
             var dstHandTransform = transform;
-            var srcHandTransform = _skeleton.transform;
-            dstHandTransform.position = srcHandTransform.position;
-            dstHandTransform.rotation = srcHandTransform.rotation;
+            dstHandTransform.position = srcPalmPosition;
+            dstHandTransform.rotation = hand.transform.rotation;
 
             // 掌の位置と向きを同期する
             // 掌をZ正方向に向けるために回転を加える(VrmForceGeneratorに依存)
-            _dstPalmTransform.position = _srcPalmTransform.position;
+            _dstPalmTransform.position = srcPalmPosition;
             _dstPalmTransform.rotation = _srcPalmTransform.rotation;
 
             var xAngle = SkeletonType switch
@@ -197,16 +210,16 @@ namespace VRMarionette.MetaXR
 
             var thumbIndexDistance = Vector3.Distance(_dstThumbTransform.position, _dstIndexTransform.position);
             var isGrabbing = thumbIndexDistance < grabThresholdDistance;
-            if (isGrabbing == _isGrabbing) return;
-            _isGrabbing = isGrabbing;
-            onGrab.Invoke(_isGrabbing);
+            if (isGrabbing == IsGrabbing) return;
+            IsGrabbing = isGrabbing;
+            onGrab.Invoke(IsGrabbing);
         }
 
         public void Grab(bool on)
         {
-            if (on == _isGrabbing) return;
-            _isGrabbing = on;
-            onGrab.Invoke(_isGrabbing);
+            if (on == IsGrabbing) return;
+            IsGrabbing = on;
+            onGrab.Invoke(IsGrabbing);
         }
 
         public enum HandType
