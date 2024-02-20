@@ -163,9 +163,6 @@ namespace VRMarionette.MetaXR
             if (controller is null) return;
 
             var srcPalmPosition = _srcControllerTransform.position;
-            var dstHandTransform = transform;
-            dstHandTransform.position = srcPalmPosition;
-            dstHandTransform.rotation = controller.transform.rotation;
 
             _dstPalmTransform.position = srcPalmPosition;
             _dstPalmTransform.rotation = _srcControllerTransform.rotation;
@@ -177,17 +174,17 @@ namespace VRMarionette.MetaXR
                 _ => 0f
             };
             _dstPalmTransform.Rotate(0f, yAngle, 0f);
+
+            var dstHandTransform = transform;
+            dstHandTransform.position = srcPalmPosition;
+            dstHandTransform.rotation = _srcControllerTransform.rotation;
         }
 
         private void SyncSkeleton()
         {
             if (Skeleton is null || !Skeleton.IsDataValid) return;
 
-            // 手の位置と向きを同期する
             var srcPalmPosition = _srcPalmTransform.position;
-            var dstHandTransform = transform;
-            dstHandTransform.position = srcPalmPosition;
-            dstHandTransform.rotation = hand.transform.rotation;
 
             // 掌の位置と向きを同期する
             // 掌をZ正方向に向けるために回転を加える(VrmForceGeneratorに依存)
@@ -207,6 +204,11 @@ namespace VRMarionette.MetaXR
             _dstThumbTransform.position = _srcThumbTransform.position;
             _dstIndexTransform.position = _srcIndexTransform.position;
             _dstRingTransform.position = _srcRingTransform.position;
+
+            // 手の位置と向きを同期する
+            var dstHandTransform = transform;
+            dstHandTransform.position = srcPalmPosition;
+            dstHandTransform.rotation = Quaternion.AngleAxis(xAngle, _dstPalmTransform.up) * _dstPalmTransform.rotation;
 
             var thumbIndexDistance = Vector3.Distance(_dstThumbTransform.position, _dstIndexTransform.position);
             var isGrabbing = thumbIndexDistance < grabThresholdDistance;
