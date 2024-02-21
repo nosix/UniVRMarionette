@@ -91,7 +91,7 @@ namespace VRMarionette
             RecordTransform();
         }
 
-        private bool ShouldUpdateCollider(Collider current, Collider other)
+        private static bool ShouldUpdateCollider(Collider current, Collider other)
         {
             // current が未設定の場合は更新する
             if (current is null) return true;
