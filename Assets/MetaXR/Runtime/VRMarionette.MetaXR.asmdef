@@ -1,17 +1,18 @@
 {
-  "name": "VRMarionette.MetaXR",
-  "rootNamespace": "VRMarionette",
-  "references": [
-    "GUID:e47c917724578cc43b5506c17a27e9a0",
-    "GUID:f64c9ebcd7899c3448a08dc9f9ddbe30"
-  ],
-  "includePlatforms": [],
-  "excludePlatforms": [],
-  "allowUnsafeCode": false,
-  "overrideReferences": false,
-  "precompiledReferences": [],
-  "autoReferenced": false,
-  "defineConstraints": [],
-  "versionDefines": [],
-  "noEngineReferences": false
+    "name": "VRMarionette.MetaXR",
+    "rootNamespace": "VRMarionette",
+    "references": [
+        "GUID:e47c917724578cc43b5506c17a27e9a0",
+        "GUID:f64c9ebcd7899c3448a08dc9f9ddbe30",
+        "GUID:7c1b02d9b20d14c899dc74abc5f97d4c"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }

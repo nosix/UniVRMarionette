@@ -338,7 +338,6 @@ MonoBehaviour:
   hold: 0
   useRemainingForceForMovement: 0
   trace: 0
-  focusColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 0.49803922}
   onFocus:
     m_PersistentCalls:
       m_Calls: []
@@ -611,7 +610,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 404a41f279a4441cba03cdbc09fef93e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  grabThresholdDistance: 0.04
+  detectPinchingEnabled: 1
+  pinchThresholdDistance: 0.04
   hand: {fileID: 0}
   controller: {fileID: 0}
   root: {fileID: 5899479096091084866}
@@ -619,11 +619,11 @@ MonoBehaviour:
   thumb: {fileID: 5046451387100057525}
   index: {fileID: 7778663428434497842}
   ring: {fileID: 2963666082928529679}
-  onGrab:
+  onPinch:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 7058272015344992995}
-        m_TargetAssemblyTypeName: VRMarionette.VrmForceSource, VRMarionette
+        m_TargetAssemblyTypeName: VRMarionette.ForceSource, VRMarionette
         m_MethodName: SetHold
         m_Mode: 0
         m_Arguments:

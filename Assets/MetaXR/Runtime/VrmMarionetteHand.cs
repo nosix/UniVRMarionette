@@ -7,7 +7,8 @@ namespace VRMarionette.MetaXR
 {
     public class VrmMarionetteHand : MonoBehaviour
     {
-        public float grabThresholdDistance = 0.04f;
+        public bool detectPinchingEnabled = true;
+        public float pinchThresholdDistance = 0.04f;
 
         public OVRHand hand;
         public OVRControllerHelper controller;
@@ -30,11 +31,12 @@ namespace VRMarionette.MetaXR
         private VRM10SpringBoneCollider ring;
 
         [Space]
-        public UnityEvent<bool> onGrab;
+        public UnityEvent<bool> onPinch;
 
+        public ForceSource ForceSource { private set; get; }
         public OVRSkeleton Skeleton { private set; get; }
         public bool IsHandTracking { private set; get; }
-        public bool IsGrabbing { private set; get; }
+        public bool IsPinching { private set; get; }
 
         private Transform _srcControllerTransform;
 
@@ -129,6 +131,8 @@ namespace VRMarionette.MetaXR
                         break;
                 }
             }
+
+            ForceSource = GetComponentInChildren<ForceSource>(true);
         }
 
         private void Update()
@@ -154,8 +158,15 @@ namespace VRMarionette.MetaXR
                 _dstRingTransform.gameObject.SetActive(true);
             }
 
-            if (IsHandTracking) SyncSkeleton();
-            else SyncController();
+            if (IsHandTracking)
+            {
+                SyncSkeleton();
+                if (detectPinchingEnabled) DetectPinching();
+            }
+            else
+            {
+                SyncController();
+            }
         }
 
         private void SyncController()
@@ -209,19 +220,20 @@ namespace VRMarionette.MetaXR
             var dstHandTransform = transform;
             dstHandTransform.position = srcPalmPosition;
             dstHandTransform.rotation = Quaternion.AngleAxis(xAngle, _dstPalmTransform.up) * _dstPalmTransform.rotation;
-
-            var thumbIndexDistance = Vector3.Distance(_dstThumbTransform.position, _dstIndexTransform.position);
-            var isGrabbing = thumbIndexDistance < grabThresholdDistance;
-            if (isGrabbing == IsGrabbing) return;
-            IsGrabbing = isGrabbing;
-            onGrab.Invoke(IsGrabbing);
         }
 
-        public void Grab(bool on)
+        private void DetectPinching()
         {
-            if (on == IsGrabbing) return;
-            IsGrabbing = on;
-            onGrab.Invoke(IsGrabbing);
+            var thumbIndexDistance = Vector3.Distance(_dstThumbTransform.position, _dstIndexTransform.position);
+            var isPinching = thumbIndexDistance < pinchThresholdDistance;
+            Pinch(isPinching);
+        }
+
+        public void Pinch(bool on)
+        {
+            if (on == IsPinching) return;
+            IsPinching = on;
+            onPinch.Invoke(on);
         }
 
         public enum HandType
