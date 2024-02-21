@@ -87,11 +87,11 @@ Prefab
       - OVRSkeleton の位置を追跡して、
         手の根元(Root)、中指の付け根(Palm)、親指の先(Thumb)、人差指の先(Index)、薬指の先(Ring)に設定された SpringBoneCollider を動かす
       - 親指の先と人差指の先が grabThresholdDistance より近付いた場合に摘まみ状態にする
-      - 状態が変わった時に onGrab を呼び出す (摘まみ状態ならば true を引数に渡す)
+      - 状態が変わった時に onPinch を呼び出す (摘まみ状態ならば true を引数に渡す)
    - Controller に OVRControllerHelper を設定すると Controller Tracking が有効になる
       - OVRControllerHelper の位置と回転を追跡して、Palm に設定された SpringBoneCollider を動かす
-      - 摘まみ状態にする場合には Grab メソッドを引数 true で呼び出す必要がある
-      - 摘まみ状態が変わった時に onGrab が呼び出される (摘まみ状態ならば引数の値は true)
+      - 摘まみ状態にする場合には Pinch メソッドを引数 true で呼び出す必要がある
+      - 摘まみ状態が変わった時に onPinch が呼び出される (摘まみ状態ならば引数の値は true)
 
 URP (Shader and Material)
 
