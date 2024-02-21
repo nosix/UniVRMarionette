@@ -1,6 +1,5 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.Events;
 using UniVRM10;
 
 namespace VRMarionette.MetaXR
@@ -29,9 +28,6 @@ namespace VRMarionette.MetaXR
 
         [SerializeField]
         private VRM10SpringBoneCollider ring;
-
-        [Space]
-        public UnityEvent<bool> onPinch;
 
         public ForceSource ForceSource { private set; get; }
         public OVRSkeleton Skeleton { private set; get; }
@@ -231,9 +227,8 @@ namespace VRMarionette.MetaXR
 
         public void Pinch(bool on)
         {
-            if (on == IsPinching) return;
             IsPinching = on;
-            onPinch.Invoke(on);
+            ForceSource.hold = IsPinching;
         }
 
         public enum HandType
