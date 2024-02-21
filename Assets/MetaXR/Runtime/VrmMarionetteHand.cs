@@ -89,6 +89,8 @@ namespace VRMarionette.MetaXR
 
         private IEnumerator Start()
         {
+            ForceSource = GetComponentInChildren<ForceSource>(true);
+
             _dstRootTransform = root.transform;
             _dstPalmTransform = palm.transform;
             _dstThumbTransform = thumb.transform;
@@ -127,8 +129,6 @@ namespace VRMarionette.MetaXR
                         break;
                 }
             }
-
-            ForceSource = GetComponentInChildren<ForceSource>(true);
         }
 
         private void Update()
