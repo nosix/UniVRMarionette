@@ -59,14 +59,12 @@ namespace VRMarionette
 
         private void OnTriggerEnter(Collider other)
         {
-            if (!_isInitialized) return;
+            if (!_isInitialized || !ShouldUpdateCollider(_pushCollider, other)) return;
 
             _pushCollider = other;
 
-            if (!hold)
-            {
-                RecordTransform();
-            }
+            // 押しの場合は表面の位置と姿勢のみ記録する
+            if (!hold) RecordTransform();
 
             if (other is CapsuleCollider capsule) Focus(capsule, true);
         }
@@ -75,19 +73,30 @@ namespace VRMarionette
         {
             if (!_isInitialized) return;
 
+            // other が Enter で無視した Collider の場合には Exit も無視する
+            if (_pushCollider != other) return;
+
             if (other is CapsuleCollider capsule) Focus(capsule, false);
 
-            if (_pushCollider == other) _pushCollider = null;
+            _pushCollider = null;
         }
 
         private void OnTriggerStay(Collider other)
         {
-            if (!_isInitialized) return;
+            if (!_isInitialized || !hold || !ShouldUpdateCollider(_holdCollider, other)) return;
 
-            // 摘まみ状態で摘まむ対象が定まっていないときは衝突した Collider を摘まむ対象に設定する
-            if (!hold || _holdCollider is not null) return;
             _holdCollider = other;
+
+            // 摘まむときは移動中の位置と姿勢を記録し続ける
             RecordTransform();
+        }
+
+        private bool ShouldUpdateCollider(Collider current, Collider other)
+        {
+            // current が未設定の場合は更新する
+            if (current is null) return true;
+            // other が current の親の場合は更新する
+            return other.transform == current.transform.parent;
         }
 
         private void RecordTransform()
