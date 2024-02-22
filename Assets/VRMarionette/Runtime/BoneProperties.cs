@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace VRMarionette
@@ -12,10 +11,7 @@ namespace VRMarionette
 
         private BoneProperties(IReadOnlyDictionary<Transform, BoneProperty> properties)
         {
-            _properties = properties.ToDictionary(
-                e => e.Key,
-                e => new BoneProperty(e.Value.Transform, e.Value.Bone, e.Value.Limit, e.Value.Collider, this)
-            );
+            _properties = properties;
         }
 
         public BoneProperty Get(Transform transform)
@@ -35,11 +31,23 @@ namespace VRMarionette
 
         public class Builder
         {
+            private readonly BoneGroups _groups;
             private readonly Dictionary<Transform, BoneProperty> _properties = new();
+
+            public Builder(BoneGroups groups)
+            {
+                _groups = groups;
+            }
 
             public void Add(HumanBodyBones bone, Transform boneTransform, HumanLimit limit, CapsuleCollider collider)
             {
-                _properties.Add(boneTransform, new BoneProperty(boneTransform, bone, limit, collider, null));
+                _properties.Add(boneTransform, new BoneProperty(
+                    boneTransform,
+                    bone,
+                    limit,
+                    collider,
+                    _groups.GetSpec(bone)
+                ));
             }
 
             public BoneProperties Build()

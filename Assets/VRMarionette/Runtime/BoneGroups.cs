@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace VRMarionette
@@ -34,11 +33,12 @@ namespace VRMarionette
             Nothing
         }
 
-        private readonly IReadOnlyDictionary<Id, BoneGroupSpec> _specs;
+        private readonly IReadOnlyDictionary<Id, BoneGroupSpec> _specsByGroup;
+        private readonly IReadOnlyDictionary<HumanBodyBones, BoneGroupSpec> _specsByBone;
 
         public BoneGroups(HumanLimits humanLimits)
         {
-            _specs = new Dictionary<Id, BoneGroupSpec>
+            _specsByGroup = new Dictionary<Id, BoneGroupSpec>
             {
                 {
                     Id.Body, new BoneGroupSpec(humanLimits,
@@ -129,77 +129,29 @@ namespace VRMarionette
                         HumanBodyBones.RightLittleDistal, HumanBodyBones.RightLittleIntermediate)
                 },
             };
+
+            var specsByBone = new Dictionary<HumanBodyBones, BoneGroupSpec>();
+
+            foreach (var spec in _specsByGroup.Values)
+            {
+                foreach (var bone in spec.Bones)
+                {
+                    specsByBone.Add(bone, spec);
+                }
+            }
+
+            _specsByBone = specsByBone;
         }
 
         public BoneGroupSpec GetSpec(Id id)
         {
-            if (_specs.TryGetValue(id, out var spec)) return spec;
+            if (_specsByGroup.TryGetValue(id, out var spec)) return spec;
             throw new InvalidOperationException($"The bone group {id} is missing from the BoneGroups configuration.");
         }
 
-        /// <summary>
-        /// 連動して動作する骨グループの仕様を表す。
-        /// 各骨に可動範囲の角度(minは負方向の角度,maxは正方向の角度)が設定されている。
-        /// グループとしての可動範囲は各骨の可動範囲の合計になる。
-        /// 各骨の可動範囲÷グループの可動範囲が Ratio (分配比率)として保持されている。
-        /// </summary>
-        public class BoneGroupSpec
+        public BoneGroupSpec GetSpec(HumanBodyBones bone)
         {
-            public IReadOnlyDictionary<HumanBodyBones, Ratio> Ratios { get; }
-
-            private Dictionary<HumanBodyBones, IReadOnlyDictionary<HumanBodyBones, Ratio>> _cachedRatios = new();
-
-            public BoneGroupSpec(HumanLimits humanLimits, params HumanBodyBones[] bones)
-            {
-                // Group に含まれる全骨の合計角度(可動範囲)を求める
-                var totalMinAngle = new Vector3();
-                var totalMaxAngle = new Vector3();
-                foreach (var bone in bones)
-                {
-                    var humanLimit = humanLimits.Get(bone);
-                    totalMinAngle += humanLimit.min; // min は 0 以下
-                    totalMaxAngle += humanLimit.max; // max は 0 以上
-                }
-
-                // Group 内での各部位の角度の分配比率を求める
-                var tmpRatios = new Dictionary<HumanBodyBones, Ratio>();
-                foreach (var bone in bones)
-                {
-                    var humanLimit = humanLimits.Get(bone);
-                    tmpRatios.Add(bone, new Ratio(
-                        new Vector3(
-                            ToRatio(humanLimit.min.x, totalMinAngle.x),
-                            ToRatio(humanLimit.min.y, totalMinAngle.y),
-                            ToRatio(humanLimit.min.z, totalMinAngle.z)
-                        ),
-                        new Vector3(
-                            ToRatio(humanLimit.max.x, totalMaxAngle.x),
-                            ToRatio(humanLimit.max.y, totalMaxAngle.y),
-                            ToRatio(humanLimit.max.z, totalMaxAngle.z)
-                        )
-                    ));
-                }
-
-                Ratios = tmpRatios;
-            }
-
-            public IReadOnlyDictionary<HumanBodyBones, Ratio> GetRatiosBasedOn(HumanBodyBones bone)
-            {
-                if (_cachedRatios.TryGetValue(bone, out var cache)) return cache;
-
-                var baseRatio = Ratios[bone];
-                var ratios = Ratios.ToDictionary(
-                    pair => pair.Key,
-                    pair => pair.Value / baseRatio
-                );
-                _cachedRatios.Add(bone, ratios);
-                return ratios;
-            }
-
-            private static float ToRatio(float value, float total)
-            {
-                return Mathf.Approximately(total, 0f) ? 0f : value / total;
-            }
+            return _specsByBone.GetValueOrDefault(bone);
         }
 
         public readonly struct Ratio

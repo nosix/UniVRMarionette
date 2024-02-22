@@ -49,7 +49,7 @@ namespace VRMarionette
 
             gameObject.GetOrAddComponent<Rigidbody>().isKinematic = true;
 
-            var bonePropertiesBuilder = new BoneProperties.Builder();
+            var bonePropertiesBuilder = new BoneProperties.Builder(_manipulator.BoneGroups);
 
             CreateColliderForEachBones(
                 animator,
@@ -336,7 +336,7 @@ namespace VRMarionette
                 Debug.Log($"ExecuteSingleForceTask: {task.Target.Bone}\n" + task.ToLogString());
             }
 
-            var context = task.CreateContext(_rootTransform);
+            var context = task.CreateContext(BoneProperties, _rootTransform);
             var force = task.Force;
 
             if (context.Bone == HumanBodyBones.Hips)
@@ -485,7 +485,12 @@ namespace VRMarionette
                 // 加える力は Hips が動く方向とは逆方向
                 var forceForChild = -ratio * forceToAxis;
 
-                var childContext = new SingleForceContext(boneProperty, forceSourcePosition, _rootTransform);
+                var childContext = new SingleForceContext(
+                    boneProperty,
+                    forceSourcePosition,
+                    BoneProperties,
+                    _rootTransform
+                );
                 var remainingForce = ApplyForceToBone(childContext, forceForChild);
 
                 if (verbose && (!filterZero || !Mathf.Approximately(forceForChild.magnitude, 0f)))
@@ -871,7 +876,7 @@ namespace VRMarionette
             {
                 Bone = target.Bone;
 
-                TargetTransform = target.Collider.transform;
+                TargetTransform = target.Transform;
                 RootTransform = rootTransform;
                 TargetAxisDirection = target.Limit.axis;
             }
@@ -880,7 +885,7 @@ namespace VRMarionette
             {
                 Bone = target.Bone;
 
-                TargetTransform = target.Collider.transform;
+                TargetTransform = target.Transform;
                 RootTransform = source.RootTransform;
                 TargetAxisDirection = target.Limit.axis;
             }
@@ -960,23 +965,25 @@ namespace VRMarionette
             public SingleForceContext(
                 BoneProperty target,
                 Vector3 sourcePosition,
+                BoneProperties properties,
                 Transform rootTransform
             ) : base(target, rootTransform)
             {
                 var localSourcePosition =
                     TargetTransform.InverseTransformPoint(sourcePosition)
                     - target.Collider.center.OrthogonalComponent(TargetAxisDirection.ToAxis());
-                OriginTransform = target.FindOrigin(TargetTransform, ref localSourcePosition);
+                OriginTransform = FindOrigin(TargetTransform, properties, ref localSourcePosition);
                 LocalSourcePosition = localSourcePosition;
             }
 
             private SingleForceContext(
                 SingleForceContext source,
-                BoneProperty target
+                BoneProperty target,
+                BoneProperties properties
             ) : base(source, target)
             {
                 var localSourcePosition = TargetTransform.InverseTransformPoint(source.SourcePosition);
-                OriginTransform = target.FindOrigin(TargetTransform, ref localSourcePosition);
+                OriginTransform = FindOrigin(TargetTransform, properties, ref localSourcePosition);
                 LocalSourcePosition = localSourcePosition;
             }
 
@@ -990,6 +997,38 @@ namespace VRMarionette
             }
 
             /// <summary>
+            /// 骨が連結して回転する場合の根元の骨の関節を探す。
+            /// 根元の骨の関節が OriginTransform になり、
+            /// 関節の位置を原点としたときの力の発生源の位置を SourceLocalPosition として保持する。
+            /// </summary>
+            /// <param name="targetTransform">連結した骨の末端側の関節</param>
+            /// <param name="boneProperties">骨に関する情報</param>
+            /// <param name="sourceLocalPosition">力の発生源の位置(末端側の関節基準の位置を受け取り、根元の関節基準の位置を返す)</param>
+            /// <returns>根元の関節</returns>
+            private static Transform FindOrigin(
+                Transform targetTransform,
+                BoneProperties boneProperties,
+                ref Vector3 sourceLocalPosition
+            )
+            {
+                var targetProperty = boneProperties.Get(targetTransform);
+                if (!targetProperty.HasCollider || targetProperty.GroupSpec is null) return targetTransform;
+
+                var originTransform = targetTransform;
+                var parentTransform = originTransform.parent;
+                while (true)
+                {
+                    var parentProperty = boneProperties.Get(parentTransform);
+                    if (!targetProperty.GroupSpec.Contains(parentProperty.Bone)) break;
+                    sourceLocalPosition += parentTransform.InverseTransformPoint(originTransform.position);
+                    originTransform = parentTransform;
+                    parentTransform = originTransform.parent;
+                }
+
+                return originTransform;
+            }
+
+            /// <summary>
             /// 親の骨を処理対象とした Context を得る
             /// </summary>
             /// <param name="properties">各 Bone の情報</param>
@@ -998,20 +1037,18 @@ namespace VRMarionette
             {
                 var currentContext = this;
                 for (
-                    var transform = TargetTransform.parent;
+                    var transform = OriginTransform.parent;
                     transform != RootTransform;
                     transform = transform.parent
                 )
                 {
                     var property = properties.Get(transform);
-                    if (!property.HasCollider)
-                    {
-                        currentContext = new SingleForceContext(currentContext, transform);
-                        continue;
-                    }
 
-                    if (property.IsLinked(Bone)) continue;
-                    return new SingleForceContext(currentContext, property);
+                    // Collider があれば処理対象なので Context を生成する
+                    if (property.HasCollider) return new SingleForceContext(currentContext, property, properties);
+
+                    // Collider が無い場合は処理対象ではないので Context を更新しつつ継続する
+                    currentContext = new SingleForceContext(currentContext, transform);
                 }
 
                 return null;
@@ -1159,9 +1196,9 @@ namespace VRMarionette
                 Target = target;
             }
 
-            public SingleForceContext CreateContext(Transform rootTransform)
+            public SingleForceContext CreateContext(BoneProperties properties, Transform rootTransform)
             {
-                return new SingleForceContext(Target, ForcePoint, rootTransform);
+                return new SingleForceContext(Target, ForcePoint, properties, rootTransform);
             }
 
             public bool IsZero()

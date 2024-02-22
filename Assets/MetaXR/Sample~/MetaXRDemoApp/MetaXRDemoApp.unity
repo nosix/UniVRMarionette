@@ -4840,7 +4840,7 @@ MonoBehaviour:
   - {fileID: 2139949405}
   humanLimits: {fileID: 11400000, guid: f1ad93ed4205647ac91f95ca97a67c08, type: 2}
   forceFields: {fileID: 11400000, guid: bc3aad8d5468f4af2b0c8a39cb7221c3, type: 2}
-  bodyWeights: {fileID: 11400000, guid: 6b9b2c03508ff4097aa87f391650bc38, type: 2}
+  bodyWeights: {fileID: 0}
   vrmFileName: model.vrm
   onLoaded:
     m_PersistentCalls:
@@ -7230,6 +7230,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enableMixer: 0
+  balancePoint: 0.5
   verbose: 0
   filterZero: 1
   isKinematic: 0

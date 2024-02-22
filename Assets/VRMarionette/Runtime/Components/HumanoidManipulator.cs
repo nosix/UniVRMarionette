@@ -14,9 +14,9 @@ namespace VRMarionette
     public class HumanoidManipulator : MonoBehaviour
     {
         public HumanLimits HumanLimits { private set; get; }
+        public BoneGroups BoneGroups { private set; get; }
 
         private Animator _animator;
-        private BoneGroups _boneGroups;
 
         public void Initialize(HumanLimitContainer humanLimits)
         {
@@ -30,7 +30,7 @@ namespace VRMarionette
                 "The HumanoidManipulator component requires the Animator component.");
 
             HumanLimits = new HumanLimits(humanLimits);
-            _boneGroups = new BoneGroups(HumanLimits);
+            BoneGroups = new BoneGroups(HumanLimits);
         }
 
         /// <summary>
@@ -244,7 +244,7 @@ namespace VRMarionette
         /// <returns>回転した角度</returns>
         private Vector3 SetBoneGroupRotation(BoneGroups.Id group, Vector3 angle, HumanBodyBones? targetBone)
         {
-            var groupSpec = _boneGroups.GetSpec(group);
+            var groupSpec = BoneGroups.GetSpec(group);
             var ratios = targetBone.HasValue
                 ? groupSpec.GetRatiosBasedOn(targetBone.Value)
                 : groupSpec.Ratios;
@@ -278,7 +278,7 @@ namespace VRMarionette
 
         private Vector3 GetBoneGroupRotation(BoneGroups.Id group)
         {
-            var groupSpec = _boneGroups.GetSpec(group);
+            var groupSpec = BoneGroups.GetSpec(group);
 
             return groupSpec.Ratios.Keys
                 .Aggregate(Vector3.zero, (current, bone) => current + GetLocalEulerAngle(bone));
