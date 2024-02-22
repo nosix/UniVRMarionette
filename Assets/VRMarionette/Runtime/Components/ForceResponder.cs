@@ -7,6 +7,11 @@ namespace VRMarionette
 {
     public class ForceResponder : MonoBehaviour
     {
+        [Tooltip("When moving the hips," +
+                 " if the position of the head is used as the pivot point, then it is 1;" +
+                 " if the position of the hips is used as the pivot point, then it is 0.")]
+        public float balancePoint = 0.5f;
+
         [Space]
         public bool verbose;
 
@@ -16,6 +21,7 @@ namespace VRMarionette
 
         private HumanoidManipulator _manipulator;
         private Transform _rootTransform;
+        private float _hipsToHeadLength;
 
         private readonly Queue<SingleForceTask> _forceTaskQueue = new();
 
@@ -35,8 +41,11 @@ namespace VRMarionette
 
             var hipsBone = animator.GetBoneTransform(HumanBodyBones.Hips) ?? throw new InvalidOperationException(
                 "The Animator has not hips bone.");
+            var headBone = animator.GetBoneTransform(HumanBodyBones.Head) ?? throw new InvalidOperationException(
+                "The Animator has not head bone.");
 
             _rootTransform = hipsBone;
+            _hipsToHeadLength = (headBone.position - hipsBone.position).magnitude;
 
             gameObject.GetOrAddComponent<Rigidbody>().isKinematic = true;
 
@@ -427,15 +436,72 @@ namespace VRMarionette
         {
             var sourcePosition = context.TargetTransform.TransformPoint(context.LocalSourcePosition);
             var targetPosition = context.TargetTransform.position;
+            var targetAxis = context.TargetTransform.up;
+            var targetBoneProperty = BoneProperties.Get(context.TargetTransform);
+
+            // sourcePosition を target の軸上に投影する
+            var sourceOnAxis = (sourcePosition - targetPosition).ProjectOnto(targetAxis);
+
+            // 軸と直交する力の成分のみが身体を曲げる働きをする
+            var forceToAxis = force.OrthogonalComponent(targetAxis);
+
+            // target の半径
+            var r = targetBoneProperty.Collider.radius;
+
+            // child へ力を加える点までの長さ
+            var length = balancePoint * _hipsToHeadLength;
+
+            if (verbose && (!filterZero || !Mathf.Approximately(force.magnitude, 0f)))
+            {
+                Debug.Log(
+                    $"ApplyForceToHipsBone\n" +
+                    $"sourcePosition={sourcePosition}\n" +
+                    $"targetPosition={targetPosition}\n" +
+                    $"sourceOnAxis={sourceOnAxis}\n" +
+                    $"forceToAxis={forceToAxis}\n" +
+                    $"r={r}\n" +
+                    $"length={length}\n"
+                );
+            }
 
             foreach (var childTransform in context.TargetTransform.GetChildren())
             {
                 if (!BoneProperties.TryGetValue(childTransform, out var boneProperty)) continue;
                 var childPosition = childTransform.position;
-                var ratio = (sourcePosition - childPosition).magnitude / (targetPosition - childPosition).magnitude;
-                var forceSourcePosition = Vector3.Lerp(childPosition, childTransform.GetChild(0).position, ratio);
+
+                // 軸と方向が一致していれば 1、直交していれば 0、逆方向であれば -1 となる係数
+                var targetToChildDirection = (childPosition - targetPosition).normalized;
+                var directionFactor = Vector3.Dot(targetToChildDirection, targetAxis);
+
+                // child へ力を加える点は childPosition から hipsToHeadLength 離れた位置
+                var childAxis = childTransform.up;
+                var sign = Vector3.Dot(targetToChildDirection, childAxis) > 0 ? 1 : -1;
+                var forceSourcePosition = childPosition + sign * length * childTransform.up;
+
+                // childPosition と sourcePosition が最も近い時に 0 (回転しない)、最も遠い時に 2 (2 倍回転する)
+                var distanceOnAxis = r + directionFactor * sourceOnAxis.magnitude;
+                var ratio = Mathf.Clamp(distanceOnAxis / r, 0f, 2f);
+
+                // 加える力は Hips が動く方向とは逆方向
+                var forceForChild = -ratio * forceToAxis;
+
                 var childContext = new SingleForceContext(boneProperty, forceSourcePosition, _rootTransform);
-                ApplyForceToBone(childContext, -force);
+                var remainingForce = ApplyForceToBone(childContext, forceForChild);
+
+                if (verbose && (!filterZero || !Mathf.Approximately(forceForChild.magnitude, 0f)))
+                {
+                    Debug.Log(
+                        $"ApplyForceToHipsBone {boneProperty.Bone}\n" +
+                        $"remainingForce={remainingForce}\n" +
+                        $"forceForChild={forceForChild}\n" +
+                        $"ratio={ratio}\n" +
+                        $"distanceOnAxis={distanceOnAxis}\n" +
+                        $"forceSourcePosition={forceSourcePosition}\n" +
+                        $"directionFactor={directionFactor}\n" +
+                        $"targetToChildDirection={targetToChildDirection}\n" +
+                        $"childPosition={childPosition}\n"
+                    );
+                }
             }
 
             transform.position += force;
@@ -699,6 +765,8 @@ namespace VRMarionette
                     $"move: {force} -> {actualMove}\n" +
                     $"sourcePosition: {sourcePosition} -> {rotatedSourcePosition}\n" +
                     $"rotationAngle: {tiltAngle + rotationAngle} -> {actualRotationAngle}\n" +
+                    $"tiltAngle: {tiltAngle}\n" +
+                    $"axisRotationAngle: {rotationAngle}\n" +
                     $"localSourcePosition: {v1} -> {v2}\n" +
                     $"localMove: {localMove}\n" +
                     $"axis: {axis}\n" +
