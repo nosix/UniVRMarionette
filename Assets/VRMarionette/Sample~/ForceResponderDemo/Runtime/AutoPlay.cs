@@ -26,18 +26,20 @@ namespace VRMarionette_Sample.ForceResponderDemo.Runtime
 
         private void OnEnable()
         {
+            if (_responder is null) return;
             StartCoroutine(AutoPlayAsync());
         }
 
         private IEnumerator AutoPlayAsync()
         {
-            var f = new Vector3(force.x, force.y, force.z);
+            Vector3 f;
 
+            var direction = 1;
             while (true)
             {
-                f.x = axis.x > 0 ? f.x : Random.Range(-force.x, force.x);
-                f.y = axis.y > 0 ? f.y : Random.Range(-force.y, force.y);
-                f.z = axis.z > 0 ? f.z : Random.Range(-force.z, force.z);
+                f.x = axis.x > 0 ? direction * force.x : Random.Range(-force.x, force.x);
+                f.y = axis.y > 0 ? direction * force.y : Random.Range(-force.y, force.y);
+                f.z = axis.z > 0 ? direction * force.z : Random.Range(-force.z, force.z);
 
                 var forcePoint = _hips.position + offset;
                 _responder.QueueForce(
@@ -49,9 +51,7 @@ namespace VRMarionette_Sample.ForceResponderDemo.Runtime
                     true
                 );
 
-                f.x *= axis.x > 0 ? -1 : 1;
-                f.y *= axis.y > 0 ? -1 : 1;
-                f.z *= axis.z > 0 ? -1 : 1;
+                direction *= -1;
 
                 transform.position = forcePoint;
 
