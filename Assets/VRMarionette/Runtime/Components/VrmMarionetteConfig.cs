@@ -10,6 +10,11 @@ namespace VRMarionette
         public bool enableMixer;
 
         [Header("ForceResponder")] [Space]
+        [Tooltip("When moving the hips," +
+                 " if the position of the head is used as the pivot point, then it is 1;" +
+                 " if the position of the hips is used as the pivot point, then it is 0.")]
+        public float balancePoint = 0.5f;
+
         public bool verbose;
 
         public bool filterZero = true;
@@ -36,7 +41,7 @@ namespace VRMarionette
         public void Setup(Vrm10Instance instance)
         {
             SetupControlRigMixer(instance.gameObject);
-            SetupForceGenerator(instance.gameObject);
+            SetupForceResponder(instance.gameObject);
             SetupRigidbody(instance.gameObject);
             SetupPostureControl(instance.gameObject);
         }
@@ -49,12 +54,13 @@ namespace VRMarionette
             mixer.manipulator = instance.GetComponent<HumanoidManipulator>();
         }
 
-        private void SetupForceGenerator(GameObject instance)
+        private void SetupForceResponder(GameObject instance)
         {
-            var forceGenerator = instance.GetComponent<ForceResponder>();
-            if (forceGenerator is null) return;
-            forceGenerator.verbose = verbose;
-            forceGenerator.filterZero = filterZero;
+            var forceResponder = instance.GetComponent<ForceResponder>();
+            if (forceResponder is null) return;
+            forceResponder.balancePoint = balancePoint;
+            forceResponder.verbose = verbose;
+            forceResponder.filterZero = filterZero;
         }
 
         private void SetupRigidbody(GameObject instance)
