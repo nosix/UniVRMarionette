@@ -525,6 +525,8 @@ namespace VRMarionette
                 );
             }
 
+            if (Mathf.Approximately(deltaAngle1, 0f) || Mathf.Approximately(deltaAngle2, 0f)) return force;
+
             var parentTransform = context.TargetTransform.parent;
 
             var lowerBone = context.Bone;
