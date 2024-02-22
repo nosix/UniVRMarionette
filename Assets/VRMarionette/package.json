@@ -1,6 +1,6 @@
 {
   "name": "com.github.nosix.vrm.marionette",
-  "version": "0.4.9",
+  "version": "0.4.10",
   "displayName": "VRMarionette",
   "description": "The library that provides the functionality to manipulate models compatible with UniVRM using hands.",
   "unity": "2022.3",
