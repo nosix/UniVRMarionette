@@ -166,6 +166,10 @@ namespace VRMarionette
         {
             if (!_isInitialized) return;
 
+            // 相手方が無効化された場合は Exit する
+            // holdCollider は接触が無くなっていても保持し続ける
+            if (_pushCollider is not null && !_pushCollider.gameObject.activeInHierarchy) OnTriggerExit(_pushCollider);
+
             ForceEvent = null;
 
             UpdateCapsule();
