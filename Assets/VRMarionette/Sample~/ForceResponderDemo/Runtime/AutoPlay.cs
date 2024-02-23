@@ -32,11 +32,11 @@ namespace VRMarionette_Sample.ForceResponderDemo.Runtime
 
         private IEnumerator AutoPlayAsync()
         {
-            Vector3 f;
-
             var direction = 1;
+            var position = 0;
             while (true)
             {
+                Vector3 f;
                 f.x = axis.x > 0 ? direction * force.x : Random.Range(-force.x, force.x);
                 f.y = axis.y > 0 ? direction * force.y : Random.Range(-force.y, force.y);
                 f.z = axis.z > 0 ? direction * force.z : Random.Range(-force.z, force.z);
@@ -51,7 +51,8 @@ namespace VRMarionette_Sample.ForceResponderDemo.Runtime
                     true
                 );
 
-                direction *= -1;
+                position += direction;
+                if (Mathf.Abs(position) == 1) direction *= -1;
 
                 transform.position = forcePoint;
 
