@@ -87,7 +87,7 @@ namespace VRMarionette.MetaXR
             }
         }
 
-        private IEnumerator Start()
+        private void Awake()
         {
             ForceSource = GetComponentInChildren<ForceSource>(true);
 
@@ -101,7 +101,10 @@ namespace VRMarionette.MetaXR
             {
                 _srcControllerTransform = controller.transform;
             }
+        }
 
+        private IEnumerator Start()
+        {
             if (hand is null) yield break;
             Skeleton = hand.GetComponent<OVRSkeleton>();
             if (Skeleton is null) yield break;
