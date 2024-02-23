@@ -448,11 +448,11 @@ namespace VRMarionette
             // 軸と直交する力の成分のみが身体を曲げる働きをする
             var forceToAxis = force.OrthogonalComponent(hipsAxis);
 
-            // Hips の半径
-            var r = hipsProperty.Collider.radius;
-
             // child へ力を加える点までの長さ
             var length = balancePoint * _hipsToHeadLength;
+
+            // Hips の半径
+            var r = hipsProperty.Collider.radius;
 
             var spineProperty = BoneProperties.Get(HumanBodyBones.Spine);
             var spinePosition = spineProperty.Transform.position;
@@ -461,52 +461,17 @@ namespace VRMarionette
             var spineAxis = spineProperty.Transform.up;
             var directionFactor = Vector3.Dot(spineAxis, hipsAxis);
 
-            // Spine へ力を加える点は spinePosition から hipsToHeadLength 離れた位置
-            var forceSourcePosition = spinePosition + length * spineAxis;
-
             // spinePosition と sourcePosition が最も近い時に 0 (回転しない)、最も遠い時に 2 (2 倍回転する)
             var sign = Vector3.Dot(sourceOnAxis, hipsAxis) < 0 ? -1 : 1;
             var distanceOnAxis = r + directionFactor * sign * sourceOnAxis.magnitude;
             var ratio = Mathf.Clamp(distanceOnAxis / r, 0f, 2f);
 
-            // 加える力は Hips が動く方向とは逆方向
-            var forceForSpine = -ratio * forceToAxis;
-
-            var childContext = new SingleForceContext(
-                spineProperty,
-                forceSourcePosition,
-                BoneProperties,
-                _rootTransform
-            );
-
-            var prevAngles = _manipulator.GetBoneRotation(HumanBodyBones.Spine);
-            var remainingForce = ApplyForceToBone(childContext, forceForSpine);
-            var currAngles = _manipulator.GetBoneRotation(HumanBodyBones.Spine);
-            var deltaAngles = currAngles - prevAngles;
-
-            // TODO ratioが 0 の場合
-
-            // 脚では Y 軸回転を無視する
-            deltaAngles.y = 0f;
-
-            // 脚では X,Z 軸回転は反対方向になる
-            var legAngles = -deltaAngles / ratio * (2f - ratio);
-
-            var leftLegRotatedAngles = _manipulator.Rotate(HumanBodyBones.LeftUpperLeg, legAngles);
-            var rightLegRotatedAngles = _manipulator.Rotate(HumanBodyBones.RightUpperLeg, legAngles);
-
-            if (verbose && (!filterZero || !Mathf.Approximately(force.magnitude, 0f)))
+            if (verbose && (!filterZero || !Mathf.Approximately(forceToAxis.magnitude, 0f)))
             {
                 Debug.Log(
                     $"ApplyForceToHipsBone\n" +
-                    $"rightLegRotatedAngles={rightLegRotatedAngles}\n" +
-                    $"leftLegRotatedAngles={leftLegRotatedAngles}\n" +
-                    $"deltaAngles={deltaAngles}\n" +
-                    $"remainingForce={remainingForce}\n" +
-                    $"forceForSpine={forceForSpine}\n" +
                     $"ratio={ratio}\n" +
                     $"distanceOnAxis={distanceOnAxis}\n" +
-                    $"forceSourcePosition={forceSourcePosition}\n" +
                     $"directionFactor={directionFactor}\n" +
                     $"spinePosition={spinePosition}\n" +
                     $"hipsPosition={hipsPosition}\n" +
@@ -518,7 +483,75 @@ namespace VRMarionette
                 );
             }
 
+            // Spine もしくは Legs を回転する
+            if (ratio >= 1f)
+            {
+                // 加える力は Hips が動く方向とは逆方向
+                var forceToChild = -ratio * forceToAxis;
+
+                var deltaAngles = ApplyForceToHipsChildBone(spineProperty, length, forceToChild);
+
+                // Y 軸回転を無視して正規化する
+                deltaAngles.y = 0f;
+                deltaAngles /= ratio;
+                ratio = 2f - ratio;
+
+                if (!Mathf.Approximately(ratio, 0f))
+                {
+                    // Legs を回転させるとき X,Z 軸回転は反対方向になる
+                    var angles = -ratio * deltaAngles;
+
+                    _manipulator.Rotate(HumanBodyBones.LeftUpperLeg, angles);
+                    _manipulator.Rotate(HumanBodyBones.RightUpperLeg, angles);
+                }
+            }
+            else
+            {
+                ratio = 2f - ratio;
+
+                // 加える力は Hips が動く方向とは逆方向
+                var forceToChild = -ratio * forceToAxis;
+
+                var leftLegProperty = BoneProperties.Get(HumanBodyBones.LeftUpperLeg);
+                var rightLegProperty = BoneProperties.Get(HumanBodyBones.RightUpperLeg);
+                var leftDeltaAngles = ApplyForceToHipsChildBone(leftLegProperty, -length, forceToChild);
+                var rightDeltaAngles = ApplyForceToHipsChildBone(rightLegProperty, -length, forceToChild);
+                var deltaAngles = (leftDeltaAngles + rightDeltaAngles) / 2f;
+
+                // Y 軸回転を無視して正規化する
+                deltaAngles.y = 0f;
+                deltaAngles /= ratio;
+                ratio = 2f - ratio;
+
+                if (!Mathf.Approximately(ratio, 0f))
+                {
+                    // Spine を回転させるとき X,Z 軸回転は反対方向になる
+                    var angles = -ratio * deltaAngles;
+
+                    _manipulator.Rotate(HumanBodyBones.Spine, angles);
+                }
+            }
+
             transform.position += force;
+        }
+
+        private Vector3 ApplyForceToHipsChildBone(BoneProperty boneProperty, float length, Vector3 force)
+        {
+            // 力を加える点は position から hipsToHeadLength 離れた位置
+            var boneTransform = boneProperty.Transform;
+            var forceSourcePosition = boneTransform.position + length * boneTransform.up;
+
+            var context = new SingleForceContext(
+                boneProperty,
+                forceSourcePosition,
+                BoneProperties,
+                _rootTransform
+            );
+
+            var prevAngles = _manipulator.GetBoneRotation(boneProperty.Bone);
+            ApplyForceToBone(context, force);
+            var currAngles = _manipulator.GetBoneRotation(boneProperty.Bone);
+            return currAngles - prevAngles;
         }
 
         /// <summary>
