@@ -435,78 +435,84 @@ namespace VRMarionette
         private void ApplyForceToHipsBone(SingleForceContext context, Vector3 force)
         {
             var sourcePosition = context.TargetTransform.TransformPoint(context.LocalSourcePosition);
-            var targetPosition = context.TargetTransform.position;
-            var targetAxis = context.TargetTransform.up;
-            var targetBoneProperty = BoneProperties.Get(context.TargetTransform);
+            var hipsPosition = context.TargetTransform.position;
+            var hipsAxis = context.TargetTransform.up;
+            var hipsProperty = BoneProperties.Get(context.TargetTransform);
 
-            // sourcePosition を target の軸上に投影する
-            var sourceOnAxis = (sourcePosition - targetPosition).ProjectOnto(targetAxis);
+            // sourcePosition を Hips の軸上に投影する
+            var sourceOnAxis = (sourcePosition - hipsPosition).ProjectOnto(hipsAxis);
 
             // 軸と直交する力の成分のみが身体を曲げる働きをする
-            var forceToAxis = force.OrthogonalComponent(targetAxis);
+            var forceToAxis = force.OrthogonalComponent(hipsAxis);
 
-            // target の半径
-            var r = targetBoneProperty.Collider.radius;
+            // Hips の半径
+            var r = hipsProperty.Collider.radius;
 
             // child へ力を加える点までの長さ
             var length = balancePoint * _hipsToHeadLength;
+
+            var spineProperty = BoneProperties.Get(HumanBodyBones.Spine);
+            var spinePosition = spineProperty.Transform.position;
+
+            // 軸と方向が一致していれば 1、直交していれば 0、逆方向であれば -1 となる係数
+            var hipsToSpineDirection = (spinePosition - hipsPosition).normalized;
+            var directionFactor = Vector3.Dot(hipsToSpineDirection, hipsAxis);
+
+            // Spine へ力を加える点は spinePosition から hipsToHeadLength 離れた位置
+            var spineAxis = spineProperty.Transform.up;
+            var sign = Vector3.Dot(hipsToSpineDirection, spineAxis) > 0 ? 1 : -1;
+            var forceSourcePosition = spinePosition + sign * length * spineAxis;
+
+            // spinePosition と sourcePosition が最も近い時に 0 (回転しない)、最も遠い時に 2 (2 倍回転する)
+            var distanceOnAxis = r + directionFactor * sourceOnAxis.magnitude;
+            var ratio = Mathf.Clamp(distanceOnAxis / r, 0f, 2f);
+
+            // 加える力は Hips が動く方向とは逆方向
+            var forceForSpine = -ratio * forceToAxis;
+
+            var childContext = new SingleForceContext(
+                spineProperty,
+                forceSourcePosition,
+                BoneProperties,
+                _rootTransform
+            );
+
+            var prevAngles = _manipulator.GetBoneRotation(HumanBodyBones.Spine);
+            var remainingForce = ApplyForceToBone(childContext, forceForSpine);
+            var currAngles = _manipulator.GetBoneRotation(HumanBodyBones.Spine);
+            var deltaAngles = currAngles - prevAngles;
+
+            // 脚では Y 軸回転を無視する
+            deltaAngles.y = 0f;
+
+            // 脚では X,Z 軸回転は反対方向になる
+            var legAngles = -deltaAngles;
+
+            var leftLegRotatedAngles = _manipulator.Rotate(HumanBodyBones.LeftUpperLeg, legAngles);
+            var rightLegRotatedAngles = _manipulator.Rotate(HumanBodyBones.RightUpperLeg, legAngles);
 
             if (verbose && (!filterZero || !Mathf.Approximately(force.magnitude, 0f)))
             {
                 Debug.Log(
                     $"ApplyForceToHipsBone\n" +
+                    $"rightLegRotatedAngles={rightLegRotatedAngles}\n" +
+                    $"leftLegRotatedAngles={leftLegRotatedAngles}\n" +
+                    $"deltaAngles={deltaAngles}\n" +
+                    $"remainingForce={remainingForce}\n" +
+                    $"forceForSpine={forceForSpine}\n" +
+                    $"ratio={ratio}\n" +
+                    $"distanceOnAxis={distanceOnAxis}\n" +
+                    $"forceSourcePosition={forceSourcePosition}\n" +
+                    $"directionFactor={directionFactor}\n" +
+                    $"hipsToSpineDirection={hipsToSpineDirection}\n" +
+                    $"spinePosition={spinePosition}\n" +
+                    $"hipsPosition={hipsPosition}\n" +
                     $"sourcePosition={sourcePosition}\n" +
-                    $"targetPosition={targetPosition}\n" +
                     $"sourceOnAxis={sourceOnAxis}\n" +
                     $"forceToAxis={forceToAxis}\n" +
                     $"r={r}\n" +
                     $"length={length}\n"
                 );
-            }
-
-            foreach (var childTransform in context.TargetTransform.GetChildren())
-            {
-                if (!BoneProperties.TryGetValue(childTransform, out var boneProperty)) continue;
-                var childPosition = childTransform.position;
-
-                // 軸と方向が一致していれば 1、直交していれば 0、逆方向であれば -1 となる係数
-                var targetToChildDirection = (childPosition - targetPosition).normalized;
-                var directionFactor = Vector3.Dot(targetToChildDirection, targetAxis);
-
-                // child へ力を加える点は childPosition から hipsToHeadLength 離れた位置
-                var childAxis = childTransform.up;
-                var sign = Vector3.Dot(targetToChildDirection, childAxis) > 0 ? 1 : -1;
-                var forceSourcePosition = childPosition + sign * length * childTransform.up;
-
-                // childPosition と sourcePosition が最も近い時に 0 (回転しない)、最も遠い時に 2 (2 倍回転する)
-                var distanceOnAxis = r + directionFactor * sourceOnAxis.magnitude;
-                var ratio = Mathf.Clamp(distanceOnAxis / r, 0f, 2f);
-
-                // 加える力は Hips が動く方向とは逆方向
-                var forceForChild = -ratio * forceToAxis;
-
-                var childContext = new SingleForceContext(
-                    boneProperty,
-                    forceSourcePosition,
-                    BoneProperties,
-                    _rootTransform
-                );
-                var remainingForce = ApplyForceToBone(childContext, forceForChild);
-
-                if (verbose && (!filterZero || !Mathf.Approximately(forceForChild.magnitude, 0f)))
-                {
-                    Debug.Log(
-                        $"ApplyForceToHipsBone {boneProperty.Bone}\n" +
-                        $"remainingForce={remainingForce}\n" +
-                        $"forceForChild={forceForChild}\n" +
-                        $"ratio={ratio}\n" +
-                        $"distanceOnAxis={distanceOnAxis}\n" +
-                        $"forceSourcePosition={forceSourcePosition}\n" +
-                        $"directionFactor={directionFactor}\n" +
-                        $"targetToChildDirection={targetToChildDirection}\n" +
-                        $"childPosition={childPosition}\n"
-                    );
-                }
             }
 
             transform.position += force;
