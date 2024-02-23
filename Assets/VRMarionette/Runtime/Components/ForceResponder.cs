@@ -343,6 +343,7 @@ namespace VRMarionette
             {
                 AdjustHipsRotation(context.TargetTransform);
                 ApplyForceToHipsBone(context, force);
+                AdjustHipsRotation(context.TargetTransform);
                 return;
             }
 
@@ -409,6 +410,8 @@ namespace VRMarionette
 
             deltaAngles.y = 0;
 
+            if (Mathf.Approximately(deltaAngles.magnitude, 0f)) return;
+
             _manipulator.Rotate(HumanBodyBones.Spine, -deltaAngles);
             _manipulator.Rotate(HumanBodyBones.LeftUpperLeg, -deltaAngles);
             _manipulator.Rotate(HumanBodyBones.RightUpperLeg, -deltaAngles);
@@ -420,7 +423,7 @@ namespace VRMarionette
             hipsRotation = Quaternion.AngleAxis(deltaAngles.z, zAxis) * hipsRotation;
             hipsTransform.localRotation = hipsRotation;
 
-            if (verbose && (!filterZero || deltaAngles.magnitude > 0.01f))
+            if (verbose)
             {
                 Debug.Log("AdjustHipsRotation\n" +
                           $"deltaAngles: {deltaAngles}\n" +
@@ -454,17 +457,16 @@ namespace VRMarionette
             var spineProperty = BoneProperties.Get(HumanBodyBones.Spine);
             var spinePosition = spineProperty.Transform.position;
 
-            // 軸と方向が一致していれば 1、直交していれば 0、逆方向であれば -1 となる係数
-            var hipsToSpineDirection = (spinePosition - hipsPosition).normalized;
-            var directionFactor = Vector3.Dot(hipsToSpineDirection, hipsAxis);
+            // Hips と Spine の軸が一致していれば 1、直交していれば 0、逆方向であれば -1 となる係数
+            var spineAxis = spineProperty.Transform.up;
+            var directionFactor = Vector3.Dot(spineAxis, hipsAxis);
 
             // Spine へ力を加える点は spinePosition から hipsToHeadLength 離れた位置
-            var spineAxis = spineProperty.Transform.up;
-            var sign = Vector3.Dot(hipsToSpineDirection, spineAxis) > 0 ? 1 : -1;
-            var forceSourcePosition = spinePosition + sign * length * spineAxis;
+            var forceSourcePosition = spinePosition + length * spineAxis;
 
             // spinePosition と sourcePosition が最も近い時に 0 (回転しない)、最も遠い時に 2 (2 倍回転する)
-            var distanceOnAxis = r + directionFactor * sourceOnAxis.magnitude;
+            var sign = Vector3.Dot(sourceOnAxis, hipsAxis) < 0 ? -1 : 1;
+            var distanceOnAxis = r + directionFactor * sign * sourceOnAxis.magnitude;
             var ratio = Mathf.Clamp(distanceOnAxis / r, 0f, 2f);
 
             // 加える力は Hips が動く方向とは逆方向
@@ -482,11 +484,13 @@ namespace VRMarionette
             var currAngles = _manipulator.GetBoneRotation(HumanBodyBones.Spine);
             var deltaAngles = currAngles - prevAngles;
 
+            // TODO ratioが 0 の場合
+
             // 脚では Y 軸回転を無視する
             deltaAngles.y = 0f;
 
             // 脚では X,Z 軸回転は反対方向になる
-            var legAngles = -deltaAngles;
+            var legAngles = -deltaAngles / ratio * (2f - ratio);
 
             var leftLegRotatedAngles = _manipulator.Rotate(HumanBodyBones.LeftUpperLeg, legAngles);
             var rightLegRotatedAngles = _manipulator.Rotate(HumanBodyBones.RightUpperLeg, legAngles);
@@ -504,7 +508,6 @@ namespace VRMarionette
                     $"distanceOnAxis={distanceOnAxis}\n" +
                     $"forceSourcePosition={forceSourcePosition}\n" +
                     $"directionFactor={directionFactor}\n" +
-                    $"hipsToSpineDirection={hipsToSpineDirection}\n" +
                     $"spinePosition={spinePosition}\n" +
                     $"hipsPosition={hipsPosition}\n" +
                     $"sourcePosition={sourcePosition}\n" +
