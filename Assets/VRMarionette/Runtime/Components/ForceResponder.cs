@@ -392,11 +392,6 @@ namespace VRMarionette
 
         private void ExecuteMultiForceTask(MultiForceTask task)
         {
-            if (task.Target.Bone == HumanBodyBones.Spine)
-            {
-                task.ChangeTarget(BoneProperties.Get(_rootTransform));
-            }
-
             var context = task.CreateContext(_rootTransform);
 
             if (task.Target.Bone == HumanBodyBones.Hips)
@@ -1241,11 +1236,6 @@ namespace VRMarionette
                 return newTask.Merge(this).Merge(task);
             }
 
-            public void ChangeTarget(BoneProperty target)
-            {
-                Target = target;
-            }
-
             public SingleForceContext CreateContext(BoneProperties properties, Transform rootTransform)
             {
                 return new SingleForceContext(Target, ForcePoint, properties, rootTransform);
@@ -1297,15 +1287,6 @@ namespace VRMarionette
             {
                 _tasks.Add(task);
                 return this;
-            }
-
-            public void ChangeTarget(BoneProperty target)
-            {
-                Target = target;
-                foreach (var task in _tasks)
-                {
-                    task.ChangeTarget(target);
-                }
             }
 
             public MultiForceContext CreateContext(Transform rootTransform)
