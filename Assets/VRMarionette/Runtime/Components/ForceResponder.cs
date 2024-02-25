@@ -73,56 +73,64 @@ namespace VRMarionette
                 var boneTransform = animator.GetBoneTransform(bone);
                 if (boneTransform is null) continue;
 
-                if (humanLimits.TryGetValue(bone, out var humanLimit) &&
-                    forceFields.TryGetValue(bone, out var forceField))
+                if (!humanLimits.TryGetValue(bone, out var humanLimit) ||
+                    !forceFields.TryGetValue(bone, out var forceField) ||
+                    bone == HumanBodyBones.UpperChest)
                 {
-                    if (bone == HumanBodyBones.Head)
-                    {
-                        bonePropertiesBuilder.Add(
-                            bone,
-                            boneTransform,
-                            humanLimit,
-                            CreateHeadCapsule(forceField, boneTransform)
-                        );
-                    }
-                    else
-                    {
-                        switch (boneTransform.childCount)
-                        {
-                            case 1:
-                                bonePropertiesBuilder.Add(
-                                    bone,
-                                    boneTransform,
-                                    humanLimit,
-                                    CreateCapsuleForSingleChildBone(
-                                        forceField,
-                                        headBoneTransform: boneTransform,
-                                        tailBoneTransform: boneTransform.GetChild(0)
-                                    )
-                                );
-                                break;
-                            case > 1:
-                                bonePropertiesBuilder.Add(
-                                    bone,
-                                    boneTransform,
-                                    humanLimit,
-                                    CreateCapsuleForMultiChildrenBone(
-                                        forceField,
-                                        headBoneTransform: boneTransform,
-                                        tailBoneTransforms: boneTransform.GetChildren()
-                                    )
-                                );
-                                break;
-                        }
-                    }
+                    // Property だけ登録して Collider は作らない
+                    bonePropertiesBuilder.Add(
+                        bone,
+                        boneTransform,
+                        humanLimits.TryGetValue(bone, out humanLimit) ? humanLimit : null,
+                        null
+                    );
+                    continue;
+                }
+
+                // 頭は末端になるので特別に処理する
+                if (bone == HumanBodyBones.Head)
+                {
+                    bonePropertiesBuilder.Add(
+                        bone,
+                        boneTransform,
+                        humanLimit,
+                        CreateHeadCapsule(forceField, boneTransform)
+                    );
+                    continue;
+                }
+
+                var children = boneTransform.GetChildren().ToList();
+
+                // UpperChest が存在する場合は無視する(UpperChest がある場合は子が１つだけ)
+                if (bone == HumanBodyBones.Chest && children.Count == 1)
+                {
+                    children = boneTransform.GetChild(0).GetChildren().ToList();
+                }
+
+                if (children.Count == 1)
+                {
+                    bonePropertiesBuilder.Add(
+                        bone,
+                        boneTransform,
+                        humanLimit,
+                        CreateCapsuleForSingleChildBone(
+                            forceField,
+                            headBoneTransform: boneTransform,
+                            tailBoneTransform: children[0]
+                        )
+                    );
                 }
                 else
                 {
                     bonePropertiesBuilder.Add(
                         bone,
                         boneTransform,
-                        humanLimits.TryGetValue(bone, out humanLimit) ? humanLimit : null,
-                        null
+                        humanLimit,
+                        CreateCapsuleForMultiChildrenBone(
+                            forceField,
+                            headBoneTransform: boneTransform,
+                            tailBoneTransforms: children
+                        )
                     );
                 }
             }
