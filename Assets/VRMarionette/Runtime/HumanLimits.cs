@@ -5,6 +5,10 @@ using UnityEngine;
 
 namespace VRMarionette
 {
+    /// <summary>
+    /// 各 Bone の回転角度の限界値
+    /// 存在しない Bone の min, max は Vector.zero に設定される
+    /// </summary>
     public class HumanLimits
     {
         private readonly IReadOnlyDictionary<HumanBodyBones, HumanLimit> _entries;
@@ -12,9 +16,13 @@ namespace VRMarionette
         private static readonly Vector3 Min = new(-180f, -180f, -180f);
         private static readonly Vector3 Max = new(180f, 180f, 180f);
 
-        public HumanLimits(HumanLimitContainer container)
+        public HumanLimits(HumanLimitContainer container, Animator animator)
         {
-            _entries = container.humanLimits.ToDictionary(e => e.bone, Sanitize);
+            _entries = container.humanLimits
+                .ToDictionary(
+                    e => e.bone,
+                    e => Filter(Sanitize(e), animator)
+                );
         }
 
         private static HumanLimit Sanitize(HumanLimit humanLimit)
@@ -33,6 +41,17 @@ namespace VRMarionette
             if (humanLimit.max.y > Max.y) humanLimit.max.y = Max.y;
             if (humanLimit.max.z > Max.z) humanLimit.max.z = Max.z;
 
+            return humanLimit;
+        }
+
+        private static HumanLimit Filter(HumanLimit humanLimit, Animator animator)
+        {
+            if (animator.GetBoneTransform(humanLimit.bone) is not null) return humanLimit;
+            humanLimit.min = Vector3.zero;
+            humanLimit.max = Vector3.zero;
+            Debug.LogWarning(
+                $"Since {humanLimit.bone} does not exist, " +
+                $"the humanLimit of {humanLimit.bone} is set to {Vector3.zero}.");
             return humanLimit;
         }
 

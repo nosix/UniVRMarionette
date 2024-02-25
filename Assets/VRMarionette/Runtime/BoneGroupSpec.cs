@@ -9,14 +9,15 @@ namespace VRMarionette
     /// 各骨に可動範囲の角度(minは負方向の角度,maxは正方向の角度)が設定されている。
     /// グループとしての可動範囲は各骨の可動範囲の合計になる。
     /// 各骨の可動範囲÷グループの可動範囲が Ratio (分配比率)として保持されている。
+    /// 存在しない Bone の Ratio は Vector3.zero に設定される。
     /// </summary>
     public class BoneGroupSpec
     {
-        public IReadOnlyDictionary<HumanBodyBones, BoneGroups.Ratio> Ratios { get; }
+        public IReadOnlyDictionary<HumanBodyBones, Ratio> Ratios { get; }
         public IEnumerable<HumanBodyBones> Bones => _cachedRatios.Keys;
 
         private readonly
-            Dictionary<HumanBodyBones, IReadOnlyDictionary<HumanBodyBones, BoneGroups.Ratio>> _cachedRatios = new();
+            Dictionary<HumanBodyBones, IReadOnlyDictionary<HumanBodyBones, Ratio>> _cachedRatios = new();
 
         public BoneGroupSpec(HumanLimits humanLimits, params HumanBodyBones[] bones)
         {
@@ -31,11 +32,11 @@ namespace VRMarionette
             }
 
             // Group 内での各部位の角度の分配比率を求める
-            var tmpRatios = new Dictionary<HumanBodyBones, BoneGroups.Ratio>();
+            var tmpRatios = new Dictionary<HumanBodyBones, Ratio>();
             foreach (var bone in bones)
             {
                 var humanLimit = humanLimits.Get(bone);
-                tmpRatios.Add(bone, new BoneGroups.Ratio(
+                tmpRatios.Add(bone, new Ratio(
                     new Vector3(
                         ToRatio(humanLimit.min.x, totalMinAngle.x),
                         ToRatio(humanLimit.min.y, totalMinAngle.y),
@@ -57,7 +58,7 @@ namespace VRMarionette
             return _cachedRatios.ContainsKey(bone);
         }
 
-        public IReadOnlyDictionary<HumanBodyBones, BoneGroups.Ratio> GetRatiosBasedOn(HumanBodyBones bone)
+        public IReadOnlyDictionary<HumanBodyBones, Ratio> GetRatiosBasedOn(HumanBodyBones bone)
         {
             if (_cachedRatios.TryGetValue(bone, out var cache)) return cache;
 
@@ -73,6 +74,50 @@ namespace VRMarionette
         private static float ToRatio(float value, float total)
         {
             return Mathf.Approximately(total, 0f) ? 0f : value / total;
+        }
+
+        public readonly struct Ratio
+        {
+            private Vector3 Min { get; }
+            private Vector3 Max { get; }
+
+            public Ratio(Vector3 min, Vector3 max)
+            {
+                Min = min;
+                Max = max;
+            }
+
+            public Vector3 Apply(Vector3 angle)
+            {
+                var x = 0f;
+                var y = 0f;
+                var z = 0f;
+
+                if (angle.x < -Mathf.Epsilon) x = angle.x * Min.x;
+                if (angle.x > Mathf.Epsilon) x = angle.x * Max.x;
+                if (angle.y < -Mathf.Epsilon) y = angle.y * Min.y;
+                if (angle.y > Mathf.Epsilon) y = angle.y * Max.y;
+                if (angle.z < -Mathf.Epsilon) z = angle.z * Min.z;
+                if (angle.z > Mathf.Epsilon) z = angle.z * Max.z;
+
+                return new Vector3(x, y, z);
+            }
+
+            public static Ratio operator /(Ratio l, Ratio r)
+            {
+                return new Ratio(
+                    new Vector3(
+                        l.Min.x / r.Min.x,
+                        l.Min.y / r.Min.y,
+                        l.Min.z / r.Min.z
+                    ),
+                    new Vector3(
+                        l.Max.x / r.Max.x,
+                        l.Max.y / r.Max.y,
+                        l.Max.z / r.Max.z
+                    )
+                );
+            }
         }
     }
 }

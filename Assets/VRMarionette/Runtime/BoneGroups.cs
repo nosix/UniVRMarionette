@@ -153,49 +153,5 @@ namespace VRMarionette
         {
             return _specsByBone.GetValueOrDefault(bone);
         }
-
-        public readonly struct Ratio
-        {
-            private Vector3 Min { get; }
-            private Vector3 Max { get; }
-
-            public Ratio(Vector3 min, Vector3 max)
-            {
-                Min = min;
-                Max = max;
-            }
-
-            public Vector3 Apply(Vector3 angle)
-            {
-                var x = 0f;
-                var y = 0f;
-                var z = 0f;
-
-                if (angle.x < -Mathf.Epsilon) x = angle.x * Min.x;
-                if (angle.x > Mathf.Epsilon) x = angle.x * Max.x;
-                if (angle.y < -Mathf.Epsilon) y = angle.y * Min.y;
-                if (angle.y > Mathf.Epsilon) y = angle.y * Max.y;
-                if (angle.z < -Mathf.Epsilon) z = angle.z * Min.z;
-                if (angle.z > Mathf.Epsilon) z = angle.z * Max.z;
-
-                return new Vector3(x, y, z);
-            }
-
-            public static Ratio operator /(Ratio l, Ratio r)
-            {
-                return new Ratio(
-                    new Vector3(
-                        l.Min.x / r.Min.x,
-                        l.Min.y / r.Min.y,
-                        l.Min.z / r.Min.z
-                    ),
-                    new Vector3(
-                        l.Max.x / r.Max.x,
-                        l.Max.y / r.Max.y,
-                        l.Max.z / r.Max.z
-                    )
-                );
-            }
-        }
     }
 }

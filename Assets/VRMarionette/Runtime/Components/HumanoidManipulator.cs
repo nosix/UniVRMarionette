@@ -29,7 +29,7 @@ namespace VRMarionette
             _animator = GetComponent<Animator>() ?? throw new InvalidOperationException(
                 "The HumanoidManipulator component requires the Animator component.");
 
-            HumanLimits = new HumanLimits(humanLimits);
+            HumanLimits = new HumanLimits(humanLimits, _animator);
             BoneGroups = new BoneGroups(HumanLimits);
         }
 
