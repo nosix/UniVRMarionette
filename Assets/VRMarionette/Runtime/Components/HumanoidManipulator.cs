@@ -102,10 +102,9 @@ namespace VRMarionette
                     break;
                 case HumanBodyBones.Spine:
                 case HumanBodyBones.Chest:
+                case HumanBodyBones.UpperChest:
                     // 2つの部位は x,y,z のいずれも連動して動く
                     groupId = BoneGroups.Id.Body;
-                    break;
-                case HumanBodyBones.UpperChest:
                     break;
                 case HumanBodyBones.Neck:
                 case HumanBodyBones.Head:

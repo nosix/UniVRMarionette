@@ -19,11 +19,11 @@ MonoBehaviour:
     max: {x: 180, y: 180, z: 180}
   - bone: 7
     axis: 1
-    min: {x: -45, y: -40, z: -30}
+    min: {x: -30, y: -40, z: -30}
     max: {x: 60, y: 40, z: 30}
   - bone: 8
     axis: 1
-    min: {x: -45, y: -40, z: -30}
+    min: {x: -30, y: -40, z: -30}
     max: {x: 60, y: 40, z: 30}
   - bone: 54
     axis: 1
@@ -43,15 +43,15 @@ MonoBehaviour:
     max: {x: 0, y: 10, z: 30}
   - bone: 13
     axis: 0
-    min: {x: -90, y: -10, z: -70}
+    min: {x: -50, y: -10, z: -70}
     max: {x: 40, y: 80, z: 30}
   - bone: 15
     axis: 0
     min: {x: 0, y: 0, z: 0}
-    max: {x: 0, y: 135, z: 0}
+    max: {x: 0, y: 120, z: 0}
   - bone: 17
     axis: 0
-    min: {x: -90, y: -15, z: -75}
+    min: {x: -70, y: -15, z: -75}
     max: {x: 0, y: 15, z: 75}
   - bone: 24
     axis: 0
@@ -119,15 +119,15 @@ MonoBehaviour:
     max: {x: 0, y: 10, z: 10}
   - bone: 14
     axis: 0
-    min: {x: -90, y: -80, z: -30}
+    min: {x: -50, y: -80, z: -30}
     max: {x: 40, y: 10, z: 70}
   - bone: 16
     axis: 0
-    min: {x: 0, y: -135, z: 0}
+    min: {x: 0, y: -120, z: 0}
     max: {x: 0, y: 0, z: 0}
   - bone: 18
     axis: 0
-    min: {x: -90, y: -15, z: -75}
+    min: {x: -70, y: -15, z: -75}
     max: {x: 0, y: 15, z: 75}
   - bone: 39
     axis: 0

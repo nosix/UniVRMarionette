@@ -42,7 +42,7 @@ namespace VRMarionette
             {
                 {
                     Id.Body, new BoneGroupSpec(humanLimits,
-                        HumanBodyBones.Spine, HumanBodyBones.Chest)
+                        HumanBodyBones.UpperChest, HumanBodyBones.Chest, HumanBodyBones.Spine)
                 },
                 {
                     Id.Neck, new BoneGroupSpec(humanLimits,
