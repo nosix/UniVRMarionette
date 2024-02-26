@@ -33,6 +33,7 @@ namespace VRMarionette
 
         private IReadOnlyDictionary<string, Transform> _springJoints;
         private readonly List<Transform> _monitoringJoints = new();
+        private Quaternion[] _monitoringJointBaseRotation = Array.Empty<Quaternion>();
         private float[] _monitoringJointRotationAngles = Array.Empty<float>();
 
         public void Setup(Vrm10Instance instance)
@@ -57,6 +58,12 @@ namespace VRMarionette
             }
 
             _monitoringJointRotationAngles = new float[_monitoringJoints.Count];
+            _monitoringJointBaseRotation = new Quaternion[_monitoringJoints.Count];
+
+            for (var i = 0; i < _monitoringJoints.Count; i++)
+            {
+                _monitoringJointBaseRotation[i] = _monitoringJoints[i].localRotation;
+            }
         }
 
         private void Update()
@@ -64,7 +71,7 @@ namespace VRMarionette
             for (var i = 0; i < _monitoringJoints.Count; i++)
             {
                 _monitoringJointRotationAngles[i] = Quaternion.Angle(
-                    Quaternion.identity,
+                    _monitoringJointBaseRotation[i],
                     _monitoringJoints[i].localRotation
                 );
             }
