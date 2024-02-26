@@ -13,8 +13,9 @@ namespace VRMarionette
         public float balancePoint = 0.5f;
 
         [Space]
-        public bool verbose;
+        public bool trace;
 
+        public bool verbose;
         public bool filterZero;
 
         public BoneProperties BoneProperties { get; private set; }
@@ -243,6 +244,18 @@ namespace VRMarionette
         )
         {
             if (!BoneProperties.TryGetValue(target, out var boneProperty)) return null;
+            if (trace)
+            {
+                Debug.Log("QueueForce " +
+                          $"{Time.frameCount} " +
+                          $"{boneProperty.Bone} " +
+                          $"{forcePoint.ToString().RemoveSpace()} " +
+                          $"{force.ToString().RemoveSpace()} " +
+                          "null " +
+                          "False " +
+                          $"{allowBodyMovement}");
+            }
+
             _forceTaskQueue.Enqueue(new SingleForceTask(
                 boneProperty,
                 forcePoint,
@@ -274,6 +287,18 @@ namespace VRMarionette
         )
         {
             if (!BoneProperties.TryGetValue(target, out var boneProperty)) return null;
+            if (trace)
+            {
+                Debug.Log("QueueForce " +
+                          $"{Time.frameCount} " +
+                          $"{boneProperty.Bone} " +
+                          $"{forcePoint.ToString().RemoveSpace()} " +
+                          $"{force.ToString().RemoveSpace()} " +
+                          $"{rotation.eulerAngles.ToString().RemoveSpace()} " +
+                          $"{allowMultiSource} " +
+                          $"{allowBodyMovement}");
+            }
+
             _forceTaskQueue.Enqueue(new SingleForceTask(
                 boneProperty,
                 forcePoint,

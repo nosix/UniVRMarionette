@@ -15,8 +15,8 @@ namespace VRMarionette
                  " if the position of the hips is used as the pivot point, then it is 0.")]
         public float balancePoint = 0.5f;
 
+        public bool trace;
         public bool verbose;
-
         public bool filterZero = true;
 
         [Header("GravityApplier")] [Space]
@@ -59,6 +59,7 @@ namespace VRMarionette
             var forceResponder = instance.GetComponent<ForceResponder>();
             if (forceResponder is null) return;
             forceResponder.balancePoint = balancePoint;
+            forceResponder.trace = trace;
             forceResponder.verbose = verbose;
             forceResponder.filterZero = filterZero;
         }

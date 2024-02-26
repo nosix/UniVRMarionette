@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace VRMarionette
 {
     public static class Utils
@@ -12,6 +14,16 @@ namespace VRMarionette
         {
             // a % b は負の値になる場合がある
             return (a % b + b) % b;
+        }
+
+        public static Vector3 ParseVector(string value)
+        {
+            var values = value.Trim('(', ')').Split(",");
+            return new Vector3(
+                float.Parse(values[0]),
+                float.Parse(values[1]),
+                float.Parse(values[2])
+            );
         }
     }
 }
