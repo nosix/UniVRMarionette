@@ -5,6 +5,20 @@ namespace VRMarionette
     public static class Vector3Extensions
     {
         /// <summary>
+        /// 角度を -180 から 180 の間に変換する
+        /// </summary>
+        /// <param name="angles">変換対象の角度</param>
+        /// <returns></returns>
+        public static Vector3 NormalizeTo180(this Vector3 angles)
+        {
+            return new Vector3(
+                Utils.NormalizeTo180(angles.x),
+                Utils.NormalizeTo180(angles.y),
+                Utils.NormalizeTo180(angles.z)
+            );
+        }
+
+        /// <summary>
         /// ベクトル V をベクトル U に射影したベクトルを求める。
         /// </summary>
         public static Vector3 ProjectOnto(this Vector3 v, Vector3 u)

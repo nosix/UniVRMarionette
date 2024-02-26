@@ -795,6 +795,13 @@ namespace VRMarionette
                     throw new ArgumentOutOfRangeException();
             }
 
+            var scale = context.TargetTransform.lossyScale;
+            tiltAngle = new Vector3(
+                Utils.NormalizeTo180(tiltAngle.x) / scale.x,
+                Utils.NormalizeTo180(tiltAngle.y) / scale.y,
+                Utils.NormalizeTo180(tiltAngle.z) / scale.z
+            );
+
             // 軸を傾ける
             var sourcePosition = context.ToWorldDirection(context.LocalSourcePosition);
             var actualRotationAngle = _manipulator.Rotate(context.Bone, tiltAngle);
@@ -803,7 +810,11 @@ namespace VRMarionette
 
             // 軸を回転する
             var remaining = Mathf.Max(1f - actualMove.magnitude / localMove.magnitude, 0f);
-            rotationAngle *= remaining;
+            rotationAngle = new Vector3(
+                remaining / scale.x * Utils.NormalizeTo180(rotationAngle.x),
+                remaining / scale.y * Utils.NormalizeTo180(rotationAngle.y),
+                remaining / scale.z * Utils.NormalizeTo180(rotationAngle.z)
+            );
             actualRotationAngle += _manipulator.Rotate(context.Bone, rotationAngle);
             rotatedSourcePosition = context.ToWorldDirection(context.LocalSourcePosition);
             actualMove = rotatedSourcePosition - sourcePosition;

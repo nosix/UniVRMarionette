@@ -44,7 +44,7 @@ namespace VRMarionette
         public Vector3 Rotate(HumanBodyBones bone, Vector3 angle)
         {
             var currentAngles = GetBoneRotation(bone);
-            var nextAngles = currentAngles + NormalizeAngles(angle);
+            var nextAngles = currentAngles + angle.NormalizeTo180();
             return SetBoneRotation(bone, nextAngles);
         }
 
@@ -289,27 +289,6 @@ namespace VRMarionette
             if (boneTransform is null) return Vector3.zero;
             var angle = HumanLimits.ToEulerAngles(bone, boneTransform.localRotation);
             return angle;
-        }
-
-        private static Vector3 NormalizeAngles(Vector3 angles)
-        {
-            return new Vector3(
-                NormalizeAngle(angles.x),
-                NormalizeAngle(angles.y),
-                NormalizeAngle(angles.z)
-            );
-        }
-
-        private static float NormalizeAngle(float angle)
-        {
-            return Mod(angle + 180f, 360) - 180f;
-        }
-
-        // 正の値である剰余を求める
-        private static float Mod(float a, float b)
-        {
-            // a % b は負の値になる場合がある
-            return (a % b + b) % b;
         }
 
         private enum BoneCategory
