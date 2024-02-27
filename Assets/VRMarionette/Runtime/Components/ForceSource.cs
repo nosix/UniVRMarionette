@@ -24,6 +24,8 @@ namespace VRMarionette
 
         public ForceEvent? ForceEvent { private set; get; }
 
+        public bool HasCollision => _holdCollider != null || _pushCollider != null;
+
         private SphereCollider _collider;
         private IFocusIndicator _focusIndicator;
         private ForceResponder _forceResponder;
