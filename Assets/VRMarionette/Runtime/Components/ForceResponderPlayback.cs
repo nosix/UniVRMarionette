@@ -39,17 +39,17 @@ namespace VRMarionette
                 var forcePoint = values[2];
                 var force = values[3];
                 var rotation = values[4];
-                var allowMultiSource = values[5];
+                var isPushing = values[5];
                 var allowBodyMovement = values[6];
 
                 _commands.Enqueue(new Command
                 {
                     FrameCount = int.Parse(frameCount),
                     Bone = Enum.Parse<HumanBodyBones>(bone),
-                    ForcePoint = Utils.ParseVector(forcePoint),
-                    Force = Utils.ParseVector(force),
+                    ForcePoint = Utils.ParseVector(forcePoint) / 100,
+                    Force = Utils.ParseVector(force) / 100,
                     Rotation = rotation != "null" ? Quaternion.Euler(Utils.ParseVector(rotation)) : null,
-                    AllowMultiSource = bool.Parse(allowMultiSource),
+                    IsPushing = bool.Parse(isPushing),
                     AllowBodyMovement = bool.Parse(allowBodyMovement)
                 });
             }
@@ -105,7 +105,7 @@ namespace VRMarionette
                     command.ForcePoint,
                     command.Force,
                     command.Rotation.Value,
-                    command.AllowMultiSource,
+                    command.IsPushing,
                     command.AllowBodyMovement
                 );
             }
@@ -127,7 +127,7 @@ namespace VRMarionette
             public Vector3 ForcePoint;
             public Vector3 Force;
             public Quaternion? Rotation;
-            public bool AllowMultiSource;
+            public bool IsPushing;
             public bool AllowBodyMovement;
         }
     }

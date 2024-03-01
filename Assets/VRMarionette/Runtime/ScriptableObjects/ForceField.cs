@@ -8,6 +8,6 @@ namespace VRMarionette
         public HumanBodyBones bone;
         public float radius;
         public Vector3 centerOffset;
-        public Direction direction;
+        public bool isAxisAligned;
     }
 }

@@ -65,38 +65,6 @@ namespace VRMarionette
                         HumanBodyBones.RightThumbProximal, HumanBodyBones.RightThumbIntermediate)
                 },
                 {
-                    Id.LeftIndexProximal, new BoneGroupSpec(humanLimits,
-                        HumanBodyBones.LeftIndexProximal, HumanBodyBones.LeftIndexIntermediate)
-                },
-                {
-                    Id.LeftMiddleProximal, new BoneGroupSpec(humanLimits,
-                        HumanBodyBones.LeftMiddleProximal, HumanBodyBones.LeftMiddleIntermediate)
-                },
-                {
-                    Id.LeftRingProximal, new BoneGroupSpec(humanLimits,
-                        HumanBodyBones.LeftRingProximal, HumanBodyBones.LeftRingIntermediate)
-                },
-                {
-                    Id.LeftLittleProximal, new BoneGroupSpec(humanLimits,
-                        HumanBodyBones.LeftLittleProximal, HumanBodyBones.LeftLittleIntermediate)
-                },
-                {
-                    Id.RightIndexProximal, new BoneGroupSpec(humanLimits,
-                        HumanBodyBones.RightIndexProximal, HumanBodyBones.RightIndexIntermediate)
-                },
-                {
-                    Id.RightMiddleProximal, new BoneGroupSpec(humanLimits,
-                        HumanBodyBones.RightMiddleProximal, HumanBodyBones.RightMiddleIntermediate)
-                },
-                {
-                    Id.RightRingProximal, new BoneGroupSpec(humanLimits,
-                        HumanBodyBones.RightRingProximal, HumanBodyBones.RightRingIntermediate)
-                },
-                {
-                    Id.RightLittleProximal, new BoneGroupSpec(humanLimits,
-                        HumanBodyBones.RightLittleProximal, HumanBodyBones.RightLittleIntermediate)
-                },
-                {
                     Id.LeftIndexDistal, new BoneGroupSpec(humanLimits,
                         HumanBodyBones.LeftIndexDistal, HumanBodyBones.LeftIndexIntermediate)
                 },
@@ -128,6 +96,38 @@ namespace VRMarionette
                     Id.RightLittleDistal, new BoneGroupSpec(humanLimits,
                         HumanBodyBones.RightLittleDistal, HumanBodyBones.RightLittleIntermediate)
                 },
+                {
+                    Id.LeftIndexProximal, new BoneGroupSpec(humanLimits,
+                        HumanBodyBones.LeftIndexProximal, HumanBodyBones.LeftIndexIntermediate)
+                },
+                {
+                    Id.LeftMiddleProximal, new BoneGroupSpec(humanLimits,
+                        HumanBodyBones.LeftMiddleProximal, HumanBodyBones.LeftMiddleIntermediate)
+                },
+                {
+                    Id.LeftRingProximal, new BoneGroupSpec(humanLimits,
+                        HumanBodyBones.LeftRingProximal, HumanBodyBones.LeftRingIntermediate)
+                },
+                {
+                    Id.LeftLittleProximal, new BoneGroupSpec(humanLimits,
+                        HumanBodyBones.LeftLittleProximal, HumanBodyBones.LeftLittleIntermediate)
+                },
+                {
+                    Id.RightIndexProximal, new BoneGroupSpec(humanLimits,
+                        HumanBodyBones.RightIndexProximal, HumanBodyBones.RightIndexIntermediate)
+                },
+                {
+                    Id.RightMiddleProximal, new BoneGroupSpec(humanLimits,
+                        HumanBodyBones.RightMiddleProximal, HumanBodyBones.RightMiddleIntermediate)
+                },
+                {
+                    Id.RightRingProximal, new BoneGroupSpec(humanLimits,
+                        HumanBodyBones.RightRingProximal, HumanBodyBones.RightRingIntermediate)
+                },
+                {
+                    Id.RightLittleProximal, new BoneGroupSpec(humanLimits,
+                        HumanBodyBones.RightLittleProximal, HumanBodyBones.RightLittleIntermediate)
+                }
             };
 
             var specsByBone = new Dictionary<HumanBodyBones, BoneGroupSpec>();
@@ -136,7 +136,8 @@ namespace VRMarionette
             {
                 foreach (var bone in spec.Bones)
                 {
-                    specsByBone.Add(bone, spec);
+                    // Intermediate は複数の BoneGroup に属するが Proximal(根元) を優先するため上書きする
+                    specsByBone[bone] = spec;
                 }
             }
 

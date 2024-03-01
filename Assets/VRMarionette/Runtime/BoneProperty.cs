@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace VRMarionette
@@ -6,25 +7,43 @@ namespace VRMarionette
     {
         public Transform Transform { get; }
         public HumanBodyBones Bone { get; }
+        public float Length { get; }
         public HumanLimit Limit { get; }
         public CapsuleCollider Collider { get; }
+        public bool? IsAxisAligned { get; }
         public BoneGroupSpec GroupSpec { get; }
 
         public bool HasCollider => Collider is not null;
+        public Direction AxisDirection => Limit.axis;
 
         public BoneProperty(
             Transform transform,
             HumanBodyBones bone,
+            float length,
             HumanLimit limit,
             CapsuleCollider collider,
+            bool? isAxisAligned,
             BoneGroupSpec groupSpec
         )
         {
             Transform = transform;
             Bone = bone;
+            Length = length;
             Limit = limit;
             Collider = collider;
+            IsAxisAligned = isAxisAligned;
             GroupSpec = groupSpec;
+        }
+
+        public float GetPositionOnAxis(Vector3 localPosition)
+        {
+            return AxisDirection switch
+            {
+                Direction.XAxis => localPosition.x,
+                Direction.YAxis => localPosition.y,
+                Direction.ZAxis => localPosition.z,
+                _ => throw new ArgumentOutOfRangeException()
+            };
         }
 
         public Vector3 GetBottomPosition()

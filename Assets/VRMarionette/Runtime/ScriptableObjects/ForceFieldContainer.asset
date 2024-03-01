@@ -16,72 +16,72 @@ MonoBehaviour:
   - bone: 0
     radius: 0.12
     centerOffset: {x: 0, y: 0, z: 0}
-    direction: 1
+    isAxisAligned: 1
   - bone: 7
     radius: 0.1
     centerOffset: {x: 0, y: 0, z: 0}
-    direction: 1
+    isAxisAligned: 1
   - bone: 8
     radius: 0.1
     centerOffset: {x: 0, y: 0, z: 0.02}
-    direction: 1
+    isAxisAligned: 1
   - bone: 54
-    radius: 0.11
-    centerOffset: {x: 0, y: -0.08, z: 0.03}
-    direction: 1
+    radius: 0.09
+    centerOffset: {x: 0, y: 0, z: 0.01}
+    isAxisAligned: 1
   - bone: 9
     radius: 0.04
     centerOffset: {x: 0, y: 0, z: 0}
-    direction: 1
+    isAxisAligned: 1
   - bone: 10
     radius: 0.09
     centerOffset: {x: 0, y: 0.1, z: 0}
-    direction: 1
+    isAxisAligned: 1
   - bone: 13
     radius: 0.03
     centerOffset: {x: 0, y: 0, z: 0}
-    direction: 0
+    isAxisAligned: 0
   - bone: 15
     radius: 0.025
     centerOffset: {x: 0, y: 0, z: 0}
-    direction: 0
+    isAxisAligned: 0
   - bone: 17
     radius: 0.02
     centerOffset: {x: 0, y: 0, z: 0}
-    direction: 0
+    isAxisAligned: 0
   - bone: 14
     radius: 0.03
     centerOffset: {x: 0, y: 0, z: 0}
-    direction: 0
+    isAxisAligned: 1
   - bone: 16
     radius: 0.025
     centerOffset: {x: 0, y: 0, z: 0}
-    direction: 0
+    isAxisAligned: 1
   - bone: 18
     radius: 0.02
     centerOffset: {x: 0, y: 0, z: 0}
-    direction: 0
+    isAxisAligned: 1
   - bone: 1
     radius: 0.055
     centerOffset: {x: 0, y: 0, z: 0}
-    direction: 1
+    isAxisAligned: 0
   - bone: 3
     radius: 0.045
     centerOffset: {x: 0, y: 0, z: -0.02}
-    direction: 1
+    isAxisAligned: 0
   - bone: 5
     radius: 0.02
     centerOffset: {x: 0, y: -0.02, z: -0.02}
-    direction: 2
+    isAxisAligned: 1
   - bone: 2
     radius: 0.055
     centerOffset: {x: 0, y: 0, z: 0}
-    direction: 1
+    isAxisAligned: 0
   - bone: 4
     radius: 0.045
     centerOffset: {x: 0, y: 0, z: -0.02}
-    direction: 1
+    isAxisAligned: 0
   - bone: 6
     radius: 0.02
     centerOffset: {x: 0, y: -0.02, z: -0.02}
-    direction: 2
+    isAxisAligned: 1

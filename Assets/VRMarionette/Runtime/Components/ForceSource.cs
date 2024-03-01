@@ -207,7 +207,7 @@ namespace VRMarionette
                 _collider.transform.position,
                 force,
                 rotation,
-                allowMultiSource: true,
+                isPushing: false,
                 useRemainingForceForMovement
             );
             _prevPosition = currPosition;

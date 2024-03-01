@@ -383,7 +383,7 @@ namespace VRMarionette
                     forcePoint,
                     movement,
                     Quaternion.identity,
-                    allowMultiSource: false,
+                    isPushing: false,
                     allowBodyMovement: allowBodyMovement
                 );
             }
@@ -432,7 +432,7 @@ namespace VRMarionette
                     target.position,
                     Vector3.zero,
                     rotation,
-                    allowMultiSource: false,
+                    isPushing: false,
                     allowBodyMovement: true
                 );
             }

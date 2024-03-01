@@ -55,13 +55,22 @@ namespace VRMarionette
                 _groups = groups;
             }
 
-            public void Add(HumanBodyBones bone, Transform boneTransform, HumanLimit limit, CapsuleCollider collider)
+            public void Add(
+                Transform boneTransform,
+                HumanBodyBones bone,
+                float length,
+                HumanLimit limit,
+                CapsuleCollider collider,
+                bool? isAxisAligned
+            )
             {
                 _properties.Add(boneTransform, new BoneProperty(
                     boneTransform,
                     bone,
+                    length,
                     limit,
                     collider,
+                    isAxisAligned,
                     _groups.GetSpec(bone)
                 ));
             }

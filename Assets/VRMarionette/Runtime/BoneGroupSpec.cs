@@ -14,8 +14,12 @@ namespace VRMarionette
     public class BoneGroupSpec
     {
         public IReadOnlyDictionary<HumanBodyBones, Ratio> Ratios { get; }
-        public IEnumerable<HumanBodyBones> Bones => _cachedRatios.Keys;
+        public IEnumerable<HumanBodyBones> Bones => Ratios.Keys;
 
+        /// <summary>
+        /// Key の Bone を基準(1)としたときの各 Bone の回転角度の割合
+        /// 全てが必要になるわけではないので必要に応じて生成する
+        /// </summary>
         private readonly
             Dictionary<HumanBodyBones, IReadOnlyDictionary<HumanBodyBones, Ratio>> _cachedRatios = new();
 
@@ -55,7 +59,7 @@ namespace VRMarionette
 
         public bool Contains(HumanBodyBones bone)
         {
-            return _cachedRatios.ContainsKey(bone);
+            return Ratios.ContainsKey(bone);
         }
 
         public IReadOnlyDictionary<HumanBodyBones, Ratio> GetRatiosBasedOn(HumanBodyBones bone)

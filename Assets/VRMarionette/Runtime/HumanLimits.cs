@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -62,8 +61,7 @@ namespace VRMarionette
 
         public HumanLimit Get(HumanBodyBones bone)
         {
-            if (_entries.TryGetValue(bone, out var humanLimit)) return humanLimit;
-            throw new InvalidOperationException($"The bone {bone} is missing from the HumanLimit configuration.");
+            return _entries.GetValueOrDefault(bone);
         }
 
         public Vector3 ClampAngle(HumanBodyBones bone, Vector3 angle)
