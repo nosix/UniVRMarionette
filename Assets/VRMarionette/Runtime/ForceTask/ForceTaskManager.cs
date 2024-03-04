@@ -31,6 +31,8 @@ namespace VRMarionette.ForceTask
         private readonly Queue<SingleForceTask> _forceTaskQueue = new();
         private readonly Queue<FeedbackTask> _feedbackTaskQueue = new();
 
+        private Func<SingleForceTask, SingleForceTask> _filter;
+
         public void Enqueue(SingleForceTask task)
         {
             _forceTaskQueue.Enqueue(task);
@@ -41,12 +43,16 @@ namespace VRMarionette.ForceTask
             // 同じ骨を対象とするタスクを併合する
             var tasks = new Dictionary<HumanBodyBones, IForceTask>();
 
+            var filter = _filter ?? (t => t);
             while (_forceTaskQueue.TryDequeue(out var queuedTask))
             {
-                var bone = queuedTask.Target.Bone;
+                var task = filter.Invoke(queuedTask);
+                if (task is null) continue;
+
+                var bone = task.Target.Bone;
                 tasks[bone] = tasks.TryGetValue(bone, out var cachedTask)
-                    ? Merge(cachedTask, queuedTask)
-                    : queuedTask;
+                    ? Merge(cachedTask, task)
+                    : task;
             }
 
             // 末端(手足頭)から順にタスクを実行する
@@ -117,6 +123,11 @@ namespace VRMarionette.ForceTask
                 // (根元側を適用すると末端側の位置がずれるため)
                 tasks[newTask.Target.Bone] = newTask;
             }
+        }
+
+        public void SetFilter(Func<SingleForceTask, SingleForceTask> filter)
+        {
+            _filter = filter;
         }
     }
 }

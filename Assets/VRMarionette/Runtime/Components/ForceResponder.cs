@@ -53,6 +53,11 @@ namespace VRMarionette
             _bones = new HumanoidBones(animator, _manipulator, forceFields, hipsBone);
         }
 
+        public void SetForceTaskFilter(Func<SingleForceTask, SingleForceTask> filter)
+        {
+            _forceTaskManager.SetFilter(filter);
+        }
+
         /// <summary>
         /// 押す力を積む (Updateで積まれた力が処理される)
         /// </summary>
@@ -68,6 +73,7 @@ namespace VRMarionette
         )
         {
             if (!BoneProperties.TryGetValue(target, out var boneProperty)) return null;
+            if (Mathf.Approximately(force.magnitude, 0f)) return null;
             if (trace)
             {
                 Debug.Log("QueueForce " +
@@ -111,6 +117,8 @@ namespace VRMarionette
         )
         {
             if (!BoneProperties.TryGetValue(target, out var boneProperty)) return null;
+            if (Mathf.Approximately(force.magnitude, 0f) &&
+                Mathf.Approximately(Quaternion.Angle(Quaternion.identity, rotation), 0f)) return null;
             if (trace)
             {
                 Debug.Log("QueueForce " +
