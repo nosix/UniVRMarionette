@@ -9,7 +9,7 @@
     "name": "nosix"
   },
   "dependencies": {
-    "com.meta.xr.sdk.all": "60.0.0"
+    "com.meta.xr.sdk.core": "60.0.0"
   },
   "samples": [
     {
