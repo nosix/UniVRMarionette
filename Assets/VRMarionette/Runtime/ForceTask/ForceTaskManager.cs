@@ -29,6 +29,7 @@ namespace VRMarionette.ForceTask
         };
 
         private readonly Queue<SingleForceTask> _forceTaskQueue = new();
+        private readonly Queue<FeedbackTask> _feedbackTaskQueue = new();
 
         public void Enqueue(SingleForceTask task)
         {
@@ -55,11 +56,13 @@ namespace VRMarionette.ForceTask
                 var newTask = executor.ExecuteTask(task);
                 if (newTask is null) continue;
 
-                // 新しい Task の対象 Bone は実行順が後のものしか存在しない
+                // 新しい Task の対象 Bone は実行順が後のものしか存在しない前提とする
                 tasks[newTask.Target.Bone] = tasks.TryGetValue(newTask.Target.Bone, out var cachedTask)
                     ? Merge(cachedTask, newTask)
                     : newTask;
             }
+
+            Feedback(executor);
         }
 
         private static IForceTask Merge(IForceTask cachedTask, SingleForceTask task)
@@ -78,6 +81,41 @@ namespace VRMarionette.ForceTask
                 }
                 default:
                     throw new InvalidOperationException();
+            }
+        }
+
+        public void Enqueue(FeedbackTask task)
+        {
+            _feedbackTaskQueue.Enqueue(task);
+        }
+
+        private void Feedback(IForceTaskExecutor executor)
+        {
+            // ForceTask に変換する
+            var tasks = new Dictionary<HumanBodyBones, IForceTask>();
+
+            while (_feedbackTaskQueue.TryDequeue(out var queuedTask))
+            {
+                var task = queuedTask.ToForceTask();
+                // １つの骨に対して複数の力をフィードバックすることはない
+                tasks.Add(task.Target.Bone, task);
+            }
+
+            // 末端(手足頭)から順にタスクを実行する
+            foreach (var bone in ExecutionOrder)
+            {
+                // UpperChest 以降にはフィードバックしない
+                // (根元側を回転すると末端側の位置がずれるため)
+                if (bone == HumanBodyBones.UpperChest) break;
+
+                if (!tasks.TryGetValue(bone, out var task)) continue;
+                var newTask = executor.ExecuteTask(task);
+                if (newTask is null) continue;
+
+                // 新しい Task の対象 Bone は実行順が後のものしか存在しない前提とする
+                // 同一の Bone に複数の Feedback が発生する場合は末端側のみを適用する
+                // (根元側を適用すると末端側の位置がずれるため)
+                tasks[newTask.Target.Bone] = newTask;
             }
         }
     }

@@ -193,14 +193,26 @@ namespace VRMarionette
 
             force = ApplyForceToBone(context, force);
 
+            // Pull の場合は他の骨の移動をフィードバックして位置調整するために目標位置を保存する
+            if (!context.IsPushing)
+            {
+                var goalPosition = task.ForcePoint + task.Force;
+                var localSourcePosition = context.Target.Transform.InverseTransformPoint(context.SourcePosition);
+                _forceTaskManager.Enqueue(new FeedbackTask(
+                    context.Target,
+                    goalPosition,
+                    localSourcePosition
+                ));
+            }
+
             var nextTarget = context.Bones.Next(context.TargetGroup);
             if (nextTarget is not null)
                 return new SingleForceTask(
                     nextTarget,
                     context.SourcePosition,
                     force,
-                    null,
-                    task.IsPushing,
+                    rotation: null,
+                    isPushing: true,
                     task.AllowBodyMovement
                 );
 
@@ -225,13 +237,14 @@ namespace VRMarionette
                 ApplyAxisRotationToBone(context, context.CalculateRotation(Vector3.zero));
                 var force = context.CalculateForce();
 
+                // TODO forcePoint の位置を見直す?
                 var isAxisAligned = context.Target.IsAxisAligned ?? throw new InvalidOperationException();
                 var sourcePosition = context.Target.Transform.TransformPoint(
                     (isAxisAligned ? 1 : -1) * context.Target.Length * context.Target.AxisDirection.ToAxis());
                 var singleForceContext = new SingleForceContext(
                     context.Target,
                     sourcePosition,
-                    isPushing: false,
+                    isPushing: true,
                     context.Bones
                 );
                 ApplyForceToBone(singleForceContext, force);
@@ -718,6 +731,7 @@ namespace VRMarionette
             var currLocalAngles = _manipulator.GetBoneRotation(context.Target.Bone);
             var nextLocalAngles = currLocalAngles + deltaAngles;
             var rotatedAngles = _manipulator.SetBoneRotation(context.Target.Bone, nextLocalAngles, isBoneAngle: false);
+            // TODO isBoneAngle: true は未使用なコードなので削除する
 
             if (verbose)
             {
