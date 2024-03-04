@@ -205,6 +205,8 @@ namespace VRMarionette
                 ));
             }
 
+            if (Mathf.Approximately(force.magnitude, 0f)) return null;
+
             var nextTarget = context.Bones.Next(context.TargetGroup);
             if (nextTarget is not null)
                 return new SingleForceTask(
