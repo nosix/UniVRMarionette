@@ -25,6 +25,7 @@ namespace VRMarionette.Util
         private bool _initialized;
         private bool _useSharedMaterial;
 
+        private Vector3 _scale;
         private Transform _container;
         private Transform _cylinder;
         private Transform _sphereTop;
@@ -55,18 +56,18 @@ namespace VRMarionette.Util
 
         private void OnCenterChanged()
         {
-            _container.localPosition = center;
+            _container.localPosition = Vector3.Scale(center, _scale);
         }
 
         private void OnRadiusChanged()
         {
             var cylinderScale = _cylinder.localScale;
-            var scale = radius * 2;
-            cylinderScale.x = scale;
-            cylinderScale.z = scale;
+            var scale = radius * 2 * _scale;
+            cylinderScale.x = scale.x;
+            cylinderScale.z = scale.y;
             _cylinder.localScale = cylinderScale;
-            _sphereTop.localScale = new Vector3(scale, scale, scale);
-            _sphereBottom.localScale = new Vector3(scale, scale, scale);
+            _sphereTop.localScale = scale;
+            _sphereBottom.localScale = scale;
         }
 
         private void OnHeightChanged()
@@ -74,15 +75,15 @@ namespace VRMarionette.Util
             var cylinderScaleY = height > radius * 2 ? (height - radius * 2) / 2 : 0;
 
             var cylinderScale = _cylinder.localScale;
-            cylinderScale.y = cylinderScaleY;
+            cylinderScale.y = cylinderScaleY * _scale.y;
             _cylinder.localScale = cylinderScale;
 
             var sphereTopPosition = _sphereTop.localPosition;
-            sphereTopPosition.y = cylinderScaleY;
+            sphereTopPosition.y = cylinderScaleY * _scale.y;
             _sphereTop.localPosition = sphereTopPosition;
 
             var sphereBottomPosition = _sphereBottom.localPosition;
-            sphereBottomPosition.y = -cylinderScaleY;
+            sphereBottomPosition.y = -cylinderScaleY * _scale.y;
             _sphereBottom.localPosition = sphereBottomPosition;
         }
 
@@ -140,6 +141,10 @@ namespace VRMarionette.Util
 
         public void SetCapsule(CapsuleCollider capsuleCollider)
         {
+            _scale = capsuleCollider.transform.lossyScale;
+            _cylinder.localScale = _scale;
+            _sphereTop.localScale = _scale;
+            _sphereBottom.localScale = _scale;
             center = capsuleCollider.center;
             radius = capsuleCollider.radius;
             height = capsuleCollider.height;
