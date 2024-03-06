@@ -942,11 +942,15 @@ namespace VRMarionette
             ) : base(target, bones)
             {
                 var localSourcePositions =
-                    forcePoints.Select(p => Target.Transform.InverseTransformPoint(p));
+                    forcePoints.Select(p =>
+                        Quaternion.Inverse(Target.Transform.rotation) * (p - target.Transform.position)
+                    );
                 _localSourcePositions = localSourcePositions.ToList();
 
                 var localNextSourcePositions =
-                    nextForcePoints.Select(p => p - Target.Transform.position);
+                    nextForcePoints.Select(p =>
+                        p - Target.Transform.position
+                    );
                 _localNextSourcePositions = localNextSourcePositions.ToList();
             }
 
