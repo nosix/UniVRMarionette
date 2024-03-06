@@ -24,12 +24,12 @@ namespace VRMarionette
 
         private void OnEnable()
         {
+            _commands.Clear();
             _animator = forceResponder.GetComponent<Animator>();
 
             var lines = File.ReadAllLines(logFilePath);
             foreach (var line in lines)
             {
-                Debug.Log(line);
                 var match = TraceLog.Match(line);
                 if (!match.Success) continue;
 
@@ -63,6 +63,8 @@ namespace VRMarionette
 
         private void Update()
         {
+            if (!_pendingCommand.HasValue && _commands.Count == 0) return;
+
             if (_pendingCommand.HasValue)
             {
                 var command = _pendingCommand.Value;
@@ -72,12 +74,8 @@ namespace VRMarionette
                     _pendingCommand = null;
                 }
             }
-            else
-            {
-                if (_commands.Count == 0) return;
-            }
 
-            while (_commands.Count > 0)
+            while (!_pendingCommand.HasValue && _commands.Count > 0)
             {
                 var command = _commands.Dequeue();
                 if (command.FrameCount == _frameCount)
@@ -87,7 +85,6 @@ namespace VRMarionette
                 else
                 {
                     _pendingCommand = command;
-                    break;
                 }
             }
 
