@@ -40,9 +40,11 @@ namespace VRMarionette
         // 押している対象の Collider
         private Collider _pushCollider;
 
-        // 前フレームの位置と回転
+        // 前フレームの位置
         private Vector3 _prevPosition;
-        private Quaternion _prevRotation;
+
+        // 摘まみ始め時点での摘まみ対象を基準としたローカル回転
+        private Quaternion _holdRotation;
 
         public void Initialize(ForceResponder forceResponder)
         {
@@ -65,8 +67,8 @@ namespace VRMarionette
 
             _pushCollider = other;
 
-            // 押しの場合は表面の位置と姿勢のみ記録する
-            if (!hold) RecordTransform();
+            // 押しの場合は表面の位置を記録する
+            if (!hold) _prevPosition = transform.position;
 
             if (other is CapsuleCollider capsule) Focus(capsule, true);
         }
@@ -89,8 +91,9 @@ namespace VRMarionette
 
             _holdCollider = other;
 
-            // 摘まむときは移動中の位置と姿勢を記録し続ける
-            RecordTransform();
+            var t = transform;
+            _prevPosition = t.position;
+            _holdRotation = Quaternion.Inverse(t.rotation) * other.transform.rotation;
         }
 
         private static bool ShouldUpdateCollider(Collider current, Collider other)
@@ -99,13 +102,6 @@ namespace VRMarionette
             if (current is null) return true;
             // other が current の親の場合は更新する
             return other.transform == current.transform.parent;
-        }
-
-        private void RecordTransform()
-        {
-            var t = transform;
-            _prevPosition = t.position;
-            _prevRotation = t.rotation;
         }
 
         private void Focus(CapsuleCollider capsule, bool on)
@@ -199,9 +195,12 @@ namespace VRMarionette
         {
             var t = transform;
             var currPosition = t.position;
-            var currRotation = t.rotation;
             var force = currPosition - _prevPosition;
-            var rotation = currRotation * Quaternion.Inverse(_prevRotation);
+            _prevPosition = currPosition;
+
+            var expectedRotation = t.rotation * _holdRotation;
+            var rotation = expectedRotation * Quaternion.Inverse(_holdCollider.transform.rotation);
+
             ForceEvent = _forceResponder.QueueForce(
                 _holdCollider.transform,
                 _collider.transform.position,
@@ -210,16 +209,14 @@ namespace VRMarionette
                 isPushing: false,
                 useRemainingForceForMovement
             );
-            _prevPosition = currPosition;
-            _prevRotation = currRotation;
         }
 
         private void QueuePushForce()
         {
             var t = transform;
             var currPosition = t.position;
-            var currRotation = t.rotation;
             var force = currPosition - _prevPosition;
+            _prevPosition = currPosition;
 
             // 前方向のみ力を働かせる
             var forward = _collider.transform.rotation * Vector3.forward;
@@ -232,8 +229,6 @@ namespace VRMarionette
                 force,
                 useRemainingForceForMovement
             );
-            _prevPosition = currPosition;
-            _prevRotation = currRotation;
         }
 
         public void SetHold(bool value)

@@ -172,6 +172,7 @@ namespace VRMarionette
 
             if (context.Target.Bone == HumanBodyBones.Hips)
             {
+                if (task.Rotation.HasValue) ApplyRotationToBone(context, task.Rotation.Value);
                 AdjustHipsRotation(context.Target.Transform);
                 ApplyForceToHipsBone(context, force);
                 AdjustHipsRotation(context.Target.Transform);
