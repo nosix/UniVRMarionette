@@ -6,6 +6,10 @@ using UniVRM10;
 
 namespace VRMarionette
 {
+    /// <summary>
+    /// IBytesConverter を実装した Component が存在する場合は
+    /// VRM ファイルのデータを IByteConverter で変換した後に VRM モデルとして読み込む
+    /// </summary>
     public class VrmLoader : VrmMarionetteBuilder
     {
         public string vrmFileName;
@@ -21,6 +25,10 @@ namespace VRMarionette
         private async void LoadVrmAsync()
         {
             var bytes = await ReadVrmBytesAsync(vrmFileName);
+
+            var converter = GetComponent<IBytesConverter>();
+            if (converter is not null) bytes = converter.Convert(bytes);
+
             var instance = await Vrm10.LoadBytesAsync(bytes);
 
             Build(instance);
