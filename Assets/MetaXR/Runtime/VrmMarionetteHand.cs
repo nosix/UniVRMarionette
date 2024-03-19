@@ -9,6 +9,11 @@ namespace VRMarionette.MetaXR
         public bool detectPinchingEnabled = true;
         public float pinchThresholdDistance = 0.04f;
 
+        public int initialPositionSamples = 60;
+        public float poseRecoveryDelay = 1;
+        public float maxPositionDelta = 0.05f;
+        public float maxRotationDelta = 30f;
+
         public OVRHand hand;
         public OVRControllerHelper controller;
 
@@ -48,6 +53,12 @@ namespace VRMarionette.MetaXR
         private Transform _dstIndexTransform;
         private Transform _dstRingTransform;
 
+        private PositionInitializer _positionInitializer;
+        private float _positionLockStartTime;
+        private float _rotationLockStartTime;
+        private Vector3 _lastPosition;
+        private Quaternion _lastRotation;
+
         private bool IsTracked => hand is not null && hand.IsTracked;
 
         private HandType SkeletonType
@@ -85,6 +96,11 @@ namespace VRMarionette.MetaXR
                 var skeletonType = SkeletonType;
                 return skeletonType != HandType.Unknown ? skeletonType : ControllerType;
             }
+        }
+
+        private void OnEnable()
+        {
+            ResetSkeletonPose();
         }
 
         private void Awake()
@@ -190,9 +206,72 @@ namespace VRMarionette.MetaXR
             dstHandTransform.rotation = _srcControllerTransform.rotation;
         }
 
+        private void ResetSkeletonPose()
+        {
+            _positionInitializer = new PositionInitializer(initialPositionSamples, maxPositionDelta);
+        }
+
         private void SyncSkeleton()
         {
-            if (Skeleton is null || !Skeleton.IsDataValid) return;
+            if (Skeleton is null || !Skeleton.IsDataValid)
+            {
+                ResetSkeletonPose();
+                return;
+            }
+
+            // ハンドトラッキングによって Hand Anchor の位置と回転が変化する
+            // Hand Anchor の位置と回転が急激に変化した場合には
+            // Hand の位置と回転を調整して移動と回転を打ち消す
+
+            var handAnchorTransform = hand.transform.parent;
+            var handAnchorPosition = handAnchorTransform.position;
+            var handAnchorRotation = handAnchorTransform.rotation;
+
+            // 初期位置がおかしな位置で固定されない様にする
+            if (_positionInitializer is not null)
+            {
+                _positionInitializer.AddSample(handAnchorPosition);
+                if (!_positionInitializer.TryGet(out _lastPosition)) return;
+                _lastRotation = handAnchorRotation;
+                _positionLockStartTime = Time.time;
+                _rotationLockStartTime = Time.time;
+                _positionInitializer = null;
+                return;
+            }
+
+            // 位置が一定時間変化しなかった場合は位置を初期化する
+            if (Time.time - _positionLockStartTime > poseRecoveryDelay ||
+                Time.time - _rotationLockStartTime > poseRecoveryDelay)
+            {
+                ResetSkeletonPose();
+                return;
+            }
+
+            // 急激な移動は無視する
+            var positionDelta = _lastPosition - handAnchorPosition;
+            if (positionDelta.magnitude > maxPositionDelta)
+            {
+                hand.transform.localPosition = handAnchorTransform.InverseTransformVector(positionDelta);
+            }
+            else
+            {
+                hand.transform.localPosition = Vector3.zero;
+                _lastPosition = handAnchorPosition;
+                _positionLockStartTime = Time.time;
+            }
+
+            // 急激な回転は無視する
+            var rotationDelta = Quaternion.Inverse(handAnchorRotation) * _lastRotation;
+            if (Quaternion.Angle(Quaternion.identity, rotationDelta) > maxRotationDelta)
+            {
+                hand.transform.localRotation = rotationDelta;
+            }
+            else
+            {
+                hand.transform.localRotation = Quaternion.identity;
+                _lastRotation = handAnchorRotation;
+                _rotationLockStartTime = Time.time;
+            }
 
             var srcPalmPosition = _srcPalmTransform.position;
 
