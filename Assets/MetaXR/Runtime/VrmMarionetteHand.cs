@@ -98,6 +98,9 @@ namespace VRMarionette.MetaXR
             }
         }
 
+        public Vector3 Forward => IsHandTracking ? _dstRootTransform.forward : _dstPalmTransform.forward;
+        public Vector3 Up => _dstPalmTransform.up;
+
         private void OnEnable()
         {
             ResetSkeletonPose();
@@ -278,7 +281,9 @@ namespace VRMarionette.MetaXR
             // 掌の位置と向きを同期する
             // 掌をZ正方向に向けるために回転を加える(VrmForceGeneratorに依存)
             _dstPalmTransform.position = srcPalmPosition;
+            _dstRootTransform.position = _srcRootTransform.position;
             _dstPalmTransform.rotation = _srcPalmTransform.rotation;
+            _dstRootTransform.rotation = _srcRootTransform.rotation;
 
             var xAngle = SkeletonType switch
             {
@@ -287,9 +292,9 @@ namespace VRMarionette.MetaXR
                 _ => 0f
             };
             _dstPalmTransform.Rotate(xAngle, 0f, 0f);
+            _dstRootTransform.Rotate(xAngle, 0f, 0f);
 
             // 位置を同期する
-            _dstRootTransform.position = _srcRootTransform.position;
             _dstThumbTransform.position = _srcThumbTransform.position;
             _dstIndexTransform.position = _srcIndexTransform.position;
             _dstRingTransform.position = _srcRingTransform.position;
