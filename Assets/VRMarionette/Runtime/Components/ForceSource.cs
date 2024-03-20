@@ -23,8 +23,8 @@ namespace VRMarionette
         public UnityEvent<FocusEvent> onFocus;
 
         public ForceEvent? ForceEvent { private set; get; }
-
         public bool HasCollision => _holdCollider != null || _pushCollider != null;
+        public CapsuleCollider Collision => _holdCollider != null ? _holdCollider : _pushCollider;
 
         private SphereCollider _collider;
         private IFocusIndicator _focusIndicator;
@@ -65,6 +65,7 @@ namespace VRMarionette
         {
             if (!_isInitialized || _pushCollider == other) return;
             if (other is not CapsuleCollider capsule) return;
+            if (!_forceResponder.BoneProperties.TryGetValue(capsule.transform, out _)) return;
 
             _pushCollider = capsule;
 
@@ -78,6 +79,7 @@ namespace VRMarionette
         {
             if (!_isInitialized || !ShouldUpdateHoldCollider(_holdCollider, other)) return;
             if (other is not CapsuleCollider capsule) return;
+            if (!_forceResponder.BoneProperties.TryGetValue(capsule.transform, out _)) return;
 
             _holdCollider = capsule;
 
