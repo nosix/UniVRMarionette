@@ -35,10 +35,10 @@ namespace VRMarionette
         private CapsuleCollider _targetCapsule;
 
         // 摘まんでいる対象の Collider
-        private Collider _holdCollider;
+        private CapsuleCollider _holdCollider;
 
         // 押している対象の Collider
-        private Collider _pushCollider;
+        private CapsuleCollider _pushCollider;
 
         // 前フレームの位置
         private Vector3 _prevPosition;
@@ -63,41 +63,33 @@ namespace VRMarionette
 
         private void OnTriggerEnter(Collider other)
         {
-            if (!_isInitialized || !ShouldUpdateCollider(_pushCollider, other)) return;
+            if (!_isInitialized || _pushCollider == other) return;
+            if (other is not CapsuleCollider capsule) return;
 
-            _pushCollider = other;
+            _pushCollider = capsule;
 
             // 押しの場合は表面の位置を記録する
             if (!hold) _prevPosition = transform.position;
 
-            if (other is CapsuleCollider capsule) Focus(capsule, true);
-        }
-
-        private void OnTriggerExit(Collider other)
-        {
-            if (!_isInitialized) return;
-
-            // other が Enter で無視した Collider の場合には Exit も無視する
-            if (_pushCollider != other) return;
-
-            if (other is CapsuleCollider capsule) Focus(capsule, false);
-
-            _pushCollider = null;
+            Focus(capsule, true);
         }
 
         private void OnTriggerStay(Collider other)
         {
-            if (!_isInitialized || !hold || !ShouldUpdateCollider(_holdCollider, other)) return;
+            if (!_isInitialized || !ShouldUpdateHoldCollider(_holdCollider, other)) return;
+            if (other is not CapsuleCollider capsule) return;
 
-            _holdCollider = other;
+            _holdCollider = capsule;
 
             var t = transform;
             _prevPosition = t.position;
             _holdRotation = Quaternion.Inverse(t.rotation) * other.transform.rotation;
         }
 
-        private static bool ShouldUpdateCollider(Collider current, Collider other)
+        private bool ShouldUpdateHoldCollider(Collider current, Collider other)
         {
+            // 摘まみ状態でなければ更新しない
+            if (!hold) return false;
             // current が未設定の場合は更新する
             if (current is null) return true;
             // other が current の親の場合は更新する
@@ -164,21 +156,27 @@ namespace VRMarionette
         {
             if (!_isInitialized) return;
 
-            // 相手方が無効化された場合は Exit する
-            // holdCollider は接触が無くなっていても保持し続ける
-            if (_pushCollider is not null && !_pushCollider.gameObject.activeInHierarchy) OnTriggerExit(_pushCollider);
+            // 相手方が無効化された場合や接触が無くなった場合は押しを止める
+            // OnTriggerExit は呼ばれない場合があるので使わない
+            // holdCollider は接触が無くなっていても摘まんでいる間は保持し続ける
+            if (_pushCollider is not null)
+            {
+                if (!_pushCollider.gameObject.activeInHierarchy ||
+                    !_pushCollider.HasCollision(_collider))
+                {
+                    Focus(_pushCollider, false);
+                    _pushCollider = null;
+                }
+            }
 
             ForceEvent = null;
 
             UpdateCapsule();
 
-            if (!hold)
+            // 摘まみ状態を終了する
+            if (!hold && _holdCollider is not null)
             {
-                // 摘まみ状態を終了する
-                if (_holdCollider is not null)
-                {
-                    _holdCollider = null;
-                }
+                _holdCollider = null;
             }
 
             if (_holdCollider is not null)
@@ -229,11 +227,6 @@ namespace VRMarionette
                 force,
                 useRemainingForceForMovement
             );
-        }
-
-        public void SetHold(bool value)
-        {
-            hold = value;
         }
 
         /// <summary>
