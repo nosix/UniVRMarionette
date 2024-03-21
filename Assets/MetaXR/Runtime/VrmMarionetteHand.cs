@@ -14,6 +14,9 @@ namespace VRMarionette.MetaXR
         public float maxPositionDelta = 0.05f;
         public float maxRotationDelta = 30f;
 
+        public float sigmaWForPosition = 1e-5f;
+        public float sigmaVForPosition = 1e-4f;
+
         public OVRHand hand;
         public OVRControllerHelper controller;
 
@@ -58,6 +61,9 @@ namespace VRMarionette.MetaXR
         private float _rotationLockStartTime;
         private Vector3 _lastPosition;
         private Quaternion _lastRotation;
+        private LocalLevelModelKalmanFilter _positionX;
+        private LocalLevelModelKalmanFilter _positionY;
+        private LocalLevelModelKalmanFilter _positionZ;
 
         private bool IsTracked => hand is not null && hand.IsTracked;
 
@@ -120,6 +126,10 @@ namespace VRMarionette.MetaXR
             {
                 _srcControllerTransform = controller.transform;
             }
+
+            _positionX = new LocalLevelModelKalmanFilter(sigmaWForPosition, sigmaVForPosition);
+            _positionY = new LocalLevelModelKalmanFilter(sigmaWForPosition, sigmaVForPosition);
+            _positionZ = new LocalLevelModelKalmanFilter(sigmaWForPosition, sigmaVForPosition);
         }
 
         private IEnumerator Start()
@@ -276,10 +286,15 @@ namespace VRMarionette.MetaXR
                 _rotationLockStartTime = Time.time;
             }
 
-            var srcPalmPosition = _srcPalmTransform.position;
+            // カルマンフィルターで平滑化する
+            _positionX.Update(ref handAnchorPosition.x);
+            _positionY.Update(ref handAnchorPosition.y);
+            _positionZ.Update(ref handAnchorPosition.z);
+            hand.transform.position += handAnchorPosition - _lastPosition;
 
             // 掌の位置と向きを同期する
             // 掌をZ正方向に向けるために回転を加える(VrmForceGeneratorに依存)
+            var srcPalmPosition = _srcPalmTransform.position;
             _dstPalmTransform.position = srcPalmPosition;
             _dstRootTransform.position = _srcRootTransform.position;
             _dstPalmTransform.rotation = _srcPalmTransform.rotation;
