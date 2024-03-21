@@ -1,6 +1,6 @@
 {
   "name": "com.github.nosix.vrm.util",
-  "version": "0.5.7",
+  "version": "0.5.8",
   "displayName": "VRMarionette Util",
   "description": "Utility for VRMarionette",
   "unity": "2022.3",
