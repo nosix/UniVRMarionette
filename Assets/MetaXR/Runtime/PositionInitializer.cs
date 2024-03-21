@@ -56,6 +56,7 @@ namespace VRMarionette.MetaXR
 
             _remainSampleNum = _requireSampleNum / 2;
             _skipSampleNum = _requireSampleNum / 2;
+            _samples.Clear();
 
             return false;
         }
